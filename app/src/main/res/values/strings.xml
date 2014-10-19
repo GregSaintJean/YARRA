@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Radio Reddit</string>
+
+    <string name="btn_play">Play</string>
+    <string name="btn_stop">Stop</string>
+
+    <string name="status_preparing">Preparing</string>
+    <string name="status_playing">Playing</string>
+    <string name="status_ducking">Ducking</string>
+
+    <string-array name="stations">
+        <item>Main</item>
+        <item>Electronic</item>
+        <item>Indie</item>
+        <item>Hip-Hop</item>
+        <item>Rock</item>
+        <item>Metal</item>
+        <item>Talk</item>
+        <item>Random</item>
+    </string-array>
+
+    <!-- Sync account information -->
+    <string name="sync_account_type">radioreddit.ifightmonsters.com</string>
+    <string name="content_authority">com.ifightmonsters.radioreddit</string>
+
+    <string name="error_unknown">Unknown error.</string>
+    <string name="error_station_uri">Unable to set station URI</string>
+    <string name="error_empty_intent">An empty intent was sent to the radio service.</string>
+
+</resources>
