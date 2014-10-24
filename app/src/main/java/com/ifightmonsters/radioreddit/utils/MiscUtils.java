@@ -8,6 +8,7 @@ import android.media.AudioManager;
  */
 public final class MiscUtils {
 
+
     public static final boolean isHeadsetOn(Context ctx){
         AudioManager mgr = (AudioManager)ctx.getSystemService(Context.AUDIO_SERVICE);
 

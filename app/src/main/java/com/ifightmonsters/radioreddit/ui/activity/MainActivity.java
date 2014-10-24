@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.service.RadioService;
+import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.fragment.MainFragment;
 import com.ifightmonsters.radioreddit.ui.fragment.OnFragmentInteractionListener;
 
@@ -110,6 +111,7 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
     protected void onStart() {
         super.onStart();
         registerReceivers();
+        RadioRedditSyncAdapter.syncImmediately(this);
     }
 
     @Override

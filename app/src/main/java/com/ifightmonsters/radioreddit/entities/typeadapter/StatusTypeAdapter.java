@@ -22,53 +22,47 @@ public class StatusTypeAdapter extends TypeAdapter<Status>{
 
     @Override
     public Status read(JsonReader in) throws IOException {
-
-        JsonToken token = in.peek();
         Status status = new Status();
-        if(token.equals(JsonToken.BEGIN_OBJECT)){
-            in.beginObject();
-            while(!in.peek().equals(JsonToken.END_OBJECT)){
-                if(in.peek().equals(JsonToken.NAME)){
-                    String name =  in.nextName();
-                    if(name.equals("online")){
-                        status.setOnline(in.nextString());
-                    } else if(name.equals("relay")) {
-                        status.setRelay(in.nextString());
-                    } else if(name.equals("listeners")) {
-                        status.setListeners(in.nextString());
-                    } else if(name.equals("all_listeners")) {
-                        status.setAll_listeners(in.nextString());
-                    } else if(name.equals("playlist")) {
-                        status.setPlaylist(in.nextString());
-                    } else if(name.equals("songs")) {
-                        status.setSongs(getSongs(in));
-                        in.skipValue();
-                    } else {
-                        in.skipValue();
-                    }
-                }
+        in.beginObject();
+        while(in.hasNext()){
+            String name = in.nextName();
+            if(name.equals("online") && in.peek() != JsonToken.NULL){
+                status.setOnline(in.nextString());
+            } else if(name.equals("relay") && in.peek() != JsonToken.NULL) {
+                status.setRelay(in.nextString());
+            } else if(name.equals("listeners") && in.peek() != JsonToken.NULL) {
+                status.setListeners(in.nextString());
+            } else if(name.equals("all_listeners") && in.peek() != JsonToken.NULL) {
+                status.setAll_listeners(in.nextString());
+            } else if(name.equals("playlist") && in.peek() != JsonToken.NULL) {
+                status.setPlaylist(in.nextString());
+            } else if(name.equals("songs") && in.peek() != JsonToken.NULL) {
+                status.setSongs(getSongs(in));
+            } else {
+                in.skipValue();
             }
-            in.endObject();
         }
+        in.endObject();
 
         return status;
     }
+
 
     private List<Song> getSongs(JsonReader in) throws IOException{
         List<Song> songs = new LinkedList<Song>();
 
         in.beginObject();
-        while(!in.peek().equals(JsonToken.END_OBJECT)){
-            if(in.peek().equals(JsonToken.NAME)){
-                String name = in.nextName();
+        while(in.hasNext()){
+            String name = in.nextName();
 
-                if(name.equals("song")){
-                    in.beginArray();
-                    while(!in.peek().equals(JsonToken.END_ARRAY)){
-                        songs.add(getSong(in));
-                    }
-                    in.endArray();
+            if(name.equals("song")){
+                in.beginArray();
+                while(in.hasNext()){
+                    songs.add(getSong(in));
                 }
+                in.endArray();
+            } else {
+                in.skipValue();
             }
         }
         in.endObject();
@@ -80,38 +74,36 @@ public class StatusTypeAdapter extends TypeAdapter<Status>{
 
         Song song = new Song();
         in.beginObject();
-        while(in.peek().equals(JsonToken.END_OBJECT)){
-            if(in.peek().equals(JsonToken.NAME)){
-                String name = in.nextName();
+        while(in.hasNext()){
+            String name = in.nextName();
 
-                if(name.equals("id")){
-                    song.setId(in.nextString());
-                } else if(name.equals("title")){
-                    song.setTitle(in.nextString());
-                } else if(name.equals("artist")){
-                    song.setArtist(in.nextString());
-                } else if(name.equals("album")){
-                    song.setAlbum(in.nextString());
-                } else if(name.equals("redditor")){
-                    song.setRedditor(in.nextString());
-                } else if(name.equals("genre")){
-                    song.setGenre(in.nextString());
-                } else if(name.equals("score")){
-                    song.setScore(in.nextString());
-                } else if(name.equals("reddit_title")){
-                    song.setReddit_title(in.nextString());
-                } else if(name.equals("reddit_url")){
-                    song.setReddit_url(in.nextString());
-                } else if(name.equals("preview_url")){
-                    song.setPreview_url(in.nextString());
-                } else if(name.equals("download_url")){
-                    song.setDownload_url(in.nextString());
-                }
+            if(name.equals("id") && in.peek() != JsonToken.NULL){
+                song.setId(in.nextString());
+            } else if(name.equals("title") && in.peek() != JsonToken.NULL){
+                song.setTitle(in.nextString());
+            } else if(name.equals("artist") && in.peek() != JsonToken.NULL){
+                song.setArtist(in.nextString());
+            } else if(name.equals("album") && in.peek() != JsonToken.NULL){
+                song.setAlbum(in.nextString());
+            } else if(name.equals("redditor") && in.peek() != JsonToken.NULL){
+                song.setRedditor(in.nextString());
+            } else if(name.equals("genre") && in.peek() != JsonToken.NULL){
+                song.setGenre(in.nextString());
+            } else if(name.equals("score") && in.peek() != JsonToken.NULL){
+                song.setScore(in.nextString());
+            } else if(name.equals("reddit_title") && in.peek() != JsonToken.NULL){
+                song.setReddit_title(in.nextString());
+            } else if(name.equals("reddit_url") && in.peek() != JsonToken.NULL){
+                song.setReddit_url(in.nextString());
+            } else if(name.equals("preview_url") && in.peek() != JsonToken.NULL){
+                song.setPreview_url(in.nextString());
+            } else if(name.equals("download_url") && in.peek() != JsonToken.NULL){
+                song.setDownload_url(in.nextString());
+            } else {
+                in.skipValue();
             }
         }
         in.endObject();
-
         return song;
-
     }
 }

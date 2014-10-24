@@ -74,7 +74,7 @@ public class RadioRedditContract {
 
         public static final String COLUMN_SCORE = "score";
 
-        public static final String COLUMN_REDDIT_TITLE = "reddit_id";
+        public static final String COLUMN_REDDIT_TITLE = "reddit_title";
 
         public static final String COLUMN_REDDIT_URL = "reddit_url";
 

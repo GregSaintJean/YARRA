@@ -14,6 +14,8 @@ import android.net.Uri;
  */
 public class RadioRedditProvider extends ContentProvider {
 
+    private static final String LOG = "RadioRedditProvider";
+
     private static final int STATUS = 1;
     private static final int STATUS_ID = 2;
     private static final int SONG = 3;

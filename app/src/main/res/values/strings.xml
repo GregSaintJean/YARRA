@@ -24,6 +24,7 @@
     <!-- Sync account information -->
     <string name="sync_account_type">radioreddit.ifightmonsters.com</string>
     <string name="content_authority">com.ifightmonsters.radioreddit</string>
+    <string name="radio_reddit_account">Radio Reddit</string>
 
     <string name="error_unknown">Unknown error.</string>
     <string name="error_station_uri">Unable to set station URI</string>
