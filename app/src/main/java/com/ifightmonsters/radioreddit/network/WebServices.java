@@ -4,7 +4,7 @@ import com.squareup.okhttp.OkHttpClient;
 
 public final class WebServices {
 
-    private static final String LOG = WebServices.class.getSimpleName();
+    private static final String LOG = "WebServices";
 
     public static final String USER_AGENT_KEY = "User-Agent";
     public static final String USER_AGENT_VALUE = "Radio Reddit for Android";

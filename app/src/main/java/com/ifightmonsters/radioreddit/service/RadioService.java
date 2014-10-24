@@ -38,12 +38,12 @@ public class RadioService extends Service implements
 
     //TODO Implement a network check
 
-    private static final String LOG = RadioService.class.getSimpleName();
-    private static final String LOCK = RadioService.class.getSimpleName() + "Lock";
+    private static final String LOG = "RadioService";
+    private static final String LOCK = "RadioServiceLock";
 
-    private static final String ACTION = RadioService.class.getCanonicalName() + ".action";
-    private static final String EXTRA = RadioService.class.getCanonicalName() + ".extra";
-    private static final String BROADCAST = RadioService.class.getCanonicalName() + ".broadcast";
+    private static final String ACTION = "com.ifightmonsters.radioreddit.service.RadioService.action";
+    private static final String EXTRA = "com.ifightmonsters.radioreddit.service.RadioService.extra";
+    private static final String BROADCAST = "com.ifightmonsters.radioreddit.service.RadioService.broadcast";
 
     public static final String ACTION_PLAY = ACTION + ".play";
     public static final String ACTION_STOP = ACTION + ".stop";

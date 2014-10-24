@@ -9,6 +9,7 @@ import android.content.UriMatcher;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -18,15 +19,14 @@ import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.service.RadioService;
 import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.fragment.MainFragment;
-import com.ifightmonsters.radioreddit.ui.fragment.OnFragmentInteractionListener;
 
 
-public class MainActivity extends ActionBarActivity implements OnFragmentInteractionListener {
+public class MainActivity extends ActionBarActivity implements OnFragmentInteractionListener, SwipeRefreshLayout.OnRefreshListener {
 
     //TODO Implement a network check
-    private static final String LOG = MainActivity.class.getSimpleName();
+    private static final String LOG = "MainActivity";
 
-    private static final String ACTIVITY_AUTHORITY = MainActivity.class.getCanonicalName();
+    private static final String ACTIVITY_AUTHORITY = "com.ifightmonsters.radioreddit.ui.activity.MainActivity";
     public static final Uri BASE_ACTIVITY_URI = Uri.parse("app://" + ACTIVITY_AUTHORITY);
 
     public static final String PATH_STATION = "station";
@@ -73,6 +73,10 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
 
                 int message = extras.getInt(RadioService.EXTRA_STATUS);
                 setActionBarTitle(message);
+            }
+
+            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
+                //TODO Turn off refreshing
             }
         }
     };
@@ -159,4 +163,8 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
 
     }
 
+    @Override
+    public void onRefresh() {
+        RadioRedditSyncAdapter.syncImmediately(this);
+    }
 }

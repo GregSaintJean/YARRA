@@ -8,9 +8,11 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SyncResult;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.ifightmonsters.radioreddit.R;
@@ -32,12 +34,22 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String LOG = "RadioRedditSyncAdapter";
 
+    public static final String BROADCAST_SYNC_COMPLETED
+            = "com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter.broadcast.sync_completed";
+    private LocalBroadcastManager mBroadMgr;
+
     public RadioRedditSyncAdapter(Context context, boolean autoInitialize){
         super(context, autoInitialize);
+        mBroadMgr = LocalBroadcastManager.getInstance(context);
     }
 
     @Override
-    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    public void onPerformSync(
+            Account account,
+            Bundle extras,
+            String authority,
+            ContentProviderClient provider,
+            SyncResult syncResult) {
 
         ContentResolver resolver = getContext().getContentResolver();
 
@@ -54,6 +66,7 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         purgeDatabases(resolver);
         commitResponses(responses, resolver);
         Log.i(LOG, "sync completed");
+        mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_COMPLETED));
     }
 
     private void purgeDatabases(ContentResolver resolver){

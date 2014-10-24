@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public final class RadioReddit {
 
-    private static final String LOG = RadioReddit.class.getSimpleName();
+    private static final String LOG = "RadioReddit";
 
     //Station status Uris
     private static final Uri MAIN = Uri.parse("http://radioreddit.com/api/status.json");

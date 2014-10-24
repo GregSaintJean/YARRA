@@ -10,7 +10,7 @@ import android.util.Log;
  */
 public class RadioRedditSyncService extends Service {
 
-    private static final String LOG = RadioRedditSyncService.class.getSimpleName();
+    private static final String LOG = "RadioRedditSyncService";
 
     private static final Object sSyncAdapterLock = new Object();
     private static RadioRedditSyncAdapter sRadioRedditSyncAdapter = null;

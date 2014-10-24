@@ -2,6 +2,7 @@ package com.ifightmonsters.radioreddit.ui.fragment;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,9 +10,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -21,11 +24,15 @@ import com.ifightmonsters.radioreddit.data.RadioRedditContract;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
 import com.ifightmonsters.radioreddit.ui.adapter.StationCursorAdapter;
 
-public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MainFragment extends Fragment
+        implements
+        LoaderManager.LoaderCallbacks<Cursor>,
+        AdapterView.OnItemClickListener{
 
     private static final String OUTPUT_TV_KEY = "output_tv";
 
     private MainActivity mActivity;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private ListView mListView;
     private ImageView mErrorImage;
     private TextView mErrorText;
@@ -33,6 +40,8 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     private CursorAdapter mAdapter;
 
     private int SONG_LOADER = 0;
+
+    private String songSortOrder = RadioRedditContract.Song.COLUMN_STATUS_ID + " DESC";
 
     private static final String[] SONG_COLUMNS = {
 
@@ -84,9 +93,12 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                              @Nullable Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fragment_main, container, false);
+        mSwipeRefreshLayout = (SwipeRefreshLayout)v.findViewById(R.id.swipe);
+        mSwipeRefreshLayout.setOnRefreshListener(mActivity);
         mListView = (ListView)v.findViewById(R.id.list);
         mAdapter = new StationCursorAdapter(getActivity(), null, false);
         mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
         mErrorImage = (ImageView)v.findViewById(R.id.error_image);
         mErrorText = (TextView)v.findViewById(R.id.error_text);
         return v;
@@ -100,7 +112,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                 SONG_COLUMNS,
                 null,
                 null,
-                null);
+                songSortOrder);
     }
 
     @Override
@@ -117,5 +129,16 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onDetach() {
         super.onDetach();
         mActivity = null;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
+                .appendPath(MainActivity.PATH_STATION)
+                .appendPath(Integer.toString(position))
+                .build();
+
+        mActivity.onFragmentInteraction(stationUri);
     }
 }

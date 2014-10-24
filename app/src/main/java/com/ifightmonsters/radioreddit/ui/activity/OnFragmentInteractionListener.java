@@ -1,4 +1,4 @@
-package com.ifightmonsters.radioreddit.ui.fragment;
+package com.ifightmonsters.radioreddit.ui.activity;
 
 import android.net.Uri;
 
