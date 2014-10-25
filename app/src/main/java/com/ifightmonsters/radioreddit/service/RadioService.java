@@ -41,9 +41,12 @@ public class RadioService extends Service implements
     private static final String LOG = "RadioService";
     private static final String LOCK = "RadioServiceLock";
 
-    private static final String ACTION = "com.ifightmonsters.radioreddit.service.RadioService.action";
-    private static final String EXTRA = "com.ifightmonsters.radioreddit.service.RadioService.extra";
-    private static final String BROADCAST = "com.ifightmonsters.radioreddit.service.RadioService.broadcast";
+    private static final String ACTION
+            = "com.ifightmonsters.radioreddit.service.RadioService.action";
+    private static final String EXTRA
+            = "com.ifightmonsters.radioreddit.service.RadioService.extra";
+    private static final String BROADCAST
+            = "com.ifightmonsters.radioreddit.service.RadioService.broadcast";
 
     public static final String ACTION_PLAY = ACTION + ".play";
     public static final String ACTION_STOP = ACTION + ".stop";
@@ -84,22 +87,7 @@ public class RadioService extends Service implements
     private int mCurrentAudioFocus = FOCUS_NOT_FOCUSED;
     private int mCurrentState = STATE_IDLE;
 
-    private static RadioService sInstance;
-    private MediaPlayer mPlayer;
-    private NotificationManager mNotificationMgr;
-    private WifiManager.WifiLock mWifiLock;
-    private AudioManager mAudioManager;
-    private LocalBroadcastManager mLocalBroadcastMgr;
-    private BroadcastReceiver mReceiver;
-
-    private static class RadioServiceReceiver extends BroadcastReceiver{
-
-        private RadioService service;
-
-        public RadioServiceReceiver(RadioService service){
-            this.service = service;
-        }
-
+    private final BroadcastReceiver mRadioServiceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(context == null || intent == null){
@@ -107,60 +95,33 @@ public class RadioService extends Service implements
             }
 
             String action = intent.getAction();
+
             if(action == null){
                 return;
             }
 
             if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
 
-                if(intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)){
-                    service.interruptPlayback();
-                }
+                Bundle extras = intent.getExtras();
 
+                if(extras != null
+                        && extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)){
+                    interruptPlayback();
+                }
             }
 
             if(action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)){
-                service.interruptPlayback();
+                interruptPlayback();
             }
         }
-    }
+    };
 
-    //TODO Replace with preference or stored last value
-    private int mCurrentStation = STATION_MAIN;
-
-    private void interruptPlayback(){
-        if(mCurrentState == STATE_PLAYING){
-            killService();
-            return;
-        }
-
-        stopSelf();
-    }
-
-    public static void play(Context ctx){
-        play(ctx, null);
-    }
-
-    public static void play(Context ctx, Integer station){
-        Intent intent = new Intent(ctx, RadioService.class);
-        intent.setAction(ACTION_PLAY);
-
-        if(station != null){
-            intent.putExtra(EXTRA_STATION, station);
-        }
-
-        ctx.startService(intent);
-    }
-
-    public static void stop(Context ctx){
-        Intent intent = new Intent(ctx, RadioService.class);
-        intent.setAction(ACTION_STOP);
-        ctx.startService(intent);
-    }
-
-    public static boolean isPlaying(){
-        return sInstance != null && sInstance.mCurrentState == STATE_PLAYING;
-    }
+    private static RadioService sInstance;
+    private MediaPlayer mPlayer;
+    private NotificationManager mNotificationMgr;
+    private WifiManager.WifiLock mWifiLock;
+    private AudioManager mAudioManager;
+    private LocalBroadcastManager mLocalBroadcastMgr;
 
     @Override
     public void onCreate() {
@@ -171,21 +132,24 @@ public class RadioService extends Service implements
         mNotificationMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
-        mReceiver = new RadioServiceReceiver(this);
-        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-        registerReceiver(mReceiver, filter);
+        registerReceivers();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if(mReceiver !=  null){
-            unregisterReceiver(mReceiver);
-        }
-
+        unregisterReceivers();
         sInstance = null;
+    }
+
+    private void registerReceivers(){
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        registerReceiver(mRadioServiceReceiver, filter);
+    }
+
+    private void unregisterReceivers(){
+        unregisterReceiver(mRadioServiceReceiver);
     }
 
     @Override
@@ -228,6 +192,32 @@ public class RadioService extends Service implements
     public boolean onError(MediaPlayer mp, int what, int extra) {
         mCurrentState = STATE_ERROR;
         Log.d(LOG, "onError called. what= " + String.valueOf(what) + " extra= " + String.valueOf(extra));
+
+        switch(what){
+            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                Log.e(LOG, "Media Player error unknown");
+                break;
+            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                Log.e(LOG, "Server died");
+                break;
+        }
+
+        switch(extra){
+            case MediaPlayer.MEDIA_ERROR_IO:
+                //TODO This most likely means that it's not connected to the network. Yea, I need a network check.
+                Log.e(LOG, "Media Player IO Error");
+                break;
+            case MediaPlayer.MEDIA_ERROR_MALFORMED:
+                Log.e(LOG, "Media Player Malformed");
+                break;
+            case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+                Log.e(LOG, "Media Player Unsupported");
+                break;
+            case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+                Log.e(LOG, "Media Player timed out");
+                break;
+        }
+
         releaseAudioFocus();
         if(mWifiLock.isHeld()) mWifiLock.release();
         return true;
@@ -258,6 +248,43 @@ public class RadioService extends Service implements
             setupPlayingStatus();
         }
 
+    }
+
+    //TODO Replace with preference or stored last value
+    private int mCurrentStation = STATION_MAIN;
+
+    private void interruptPlayback(){
+        if(mCurrentState == STATE_PLAYING){
+            killService();
+            return;
+        }
+
+        stopSelf();
+    }
+
+    public static void play(Context ctx){
+        play(ctx, null);
+    }
+
+    public static void play(Context ctx, Integer station){
+        Intent intent = new Intent(ctx, RadioService.class);
+        intent.setAction(ACTION_PLAY);
+
+        if(station != null){
+            intent.putExtra(EXTRA_STATION, station);
+        }
+
+        ctx.startService(intent);
+    }
+
+    public static void stop(Context ctx){
+        Intent intent = new Intent(ctx, RadioService.class);
+        intent.setAction(ACTION_STOP);
+        ctx.startService(intent);
+    }
+
+    public static boolean isPlaying(){
+        return sInstance != null && sInstance.mCurrentState == STATE_PLAYING;
     }
 
     private void setupPlayingStatus(){
@@ -297,7 +324,7 @@ public class RadioService extends Service implements
         if(mPlayer == null){
             mPlayer = new MediaPlayer();
             mPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mPlayer.setOnCompletionListener(this);
             mPlayer.setOnErrorListener(this);
             mPlayer.setOnPreparedListener(this);

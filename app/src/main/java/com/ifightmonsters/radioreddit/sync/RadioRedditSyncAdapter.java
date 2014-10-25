@@ -34,6 +34,10 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String LOG = "RadioRedditSyncAdapter";
 
+
+    public static final String BROADCAST_SYNC_BEGIN
+            = "com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter.broadcast.sync_begin";
+
     public static final String BROADCAST_SYNC_COMPLETED
             = "com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter.broadcast.sync_completed";
     private LocalBroadcastManager mBroadMgr;

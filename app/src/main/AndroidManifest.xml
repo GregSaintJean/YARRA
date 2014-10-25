@@ -25,6 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.activity.SettingsActivity"/>
 
         <service android:name=".service.RadioService" />
 
@@ -54,6 +55,7 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter" />
         </service>
+
     </application>
 
 </manifest>

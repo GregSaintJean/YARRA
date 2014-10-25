@@ -1,35 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.SwipeRefreshLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/swipe"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
-    <LinearLayout
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
         android:gravity="center"
         android:orientation="vertical">
 
-        <ListView
-            android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@android:color/black"
+        android:choiceMode="singleChoice"/>
 
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <RelativeLayout
+        android:id="@+id/error_container"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:background="@android:color/white"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone">
         <ImageView
             android:id="@+id/error_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"/>
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_signal_wifi_off"/>
         <TextView
             android:id="@+id/error_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@id/error_image"
+            android:textColor="@android:color/black"
             android:layout_marginTop="5dp"
-            android:textAlignment="center"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-</android.support.v4.widget.SwipeRefreshLayout>
+            android:layout_centerHorizontal="true"
+            android:text="@string/error_connectivity"
+            android:textAlignment="center"/>
+    </RelativeLayout>
+</LinearLayout>

@@ -1,50 +1,47 @@
 package com.ifightmonsters.radioreddit.ui.fragment;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
-import android.net.Uri;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.CursorAdapter;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.ProgressBar;
 
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.data.RadioRedditContract;
+import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
+import com.ifightmonsters.radioreddit.ui.activity.SettingsActivity;
 import com.ifightmonsters.radioreddit.ui.adapter.StationCursorAdapter;
+import com.ifightmonsters.radioreddit.utils.NetworkUtils;
 
 public class MainFragment extends Fragment
         implements
-        LoaderManager.LoaderCallbacks<Cursor>,
-        AdapterView.OnItemClickListener{
+        LoaderManager.LoaderCallbacks<Cursor>{
+
+    private static final String LOG = "MainFragment";
 
     private static final String OUTPUT_TV_KEY = "output_tv";
-
-    private MainActivity mActivity;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
-    private ListView mListView;
-    private ImageView mErrorImage;
-    private TextView mErrorText;
-
-    private CursorAdapter mAdapter;
-
-    private int SONG_LOADER = 0;
-
     private String songSortOrder = RadioRedditContract.Song.COLUMN_STATUS_ID + " DESC";
 
     private static final String[] SONG_COLUMNS = {
-
             RadioRedditContract.Song.TABLE_NAME + "." + RadioRedditContract.Song._ID,
             RadioRedditContract.Song.COLUMN_REDDIT_ID,
             RadioRedditContract.Song.COLUMN_STATUS_ID,
@@ -58,8 +55,46 @@ public class MainFragment extends Fragment
             RadioRedditContract.Song.COLUMN_REDDITOR,
             RadioRedditContract.Song.COLUMN_DOWNLOAD_URL,
             RadioRedditContract.Song.COLUMN_PREVIEW_URL
-
     };
+
+    private LocalBroadcastManager mLocalMgr;
+
+    private final BroadcastReceiver mMainFragmentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(context == null || intent == null){
+                return;
+            }
+
+            String action = intent.getAction();
+
+            if(action == null){
+                return;
+            }
+
+            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
+                //TODO Turn off refreshing
+            }
+
+            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN)){
+                //TODO implement
+            }
+
+            if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
+                checkNetworkConnectivity();
+            }
+
+        }
+    };
+
+    private int SONG_LOADER = 0;
+
+    private MainActivity mActivity;
+    private ListView mListView;
+    private View mErrorContainer;
+    private ProgressBar mProgress;
+    private CursorAdapter mAdapter;
 
     public static MainFragment newInstance(){
         return new MainFragment();
@@ -84,6 +119,7 @@ public class MainFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mLocalMgr = LocalBroadcastManager.getInstance(mActivity);
         setHasOptionsMenu(true);
     }
 
@@ -93,15 +129,56 @@ public class MainFragment extends Fragment
                              @Nullable Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fragment_main, container, false);
-        mSwipeRefreshLayout = (SwipeRefreshLayout)v.findViewById(R.id.swipe);
-        mSwipeRefreshLayout.setOnRefreshListener(mActivity);
         mListView = (ListView)v.findViewById(R.id.list);
-        mAdapter = new StationCursorAdapter(getActivity(), null, false);
+        mListView.addHeaderView(inflater.inflate(R.layout.list_station_header, null, false));
+        mAdapter = new StationCursorAdapter(mActivity, null, false, mListView);
         mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(this);
-        mErrorImage = (ImageView)v.findViewById(R.id.error_image);
-        mErrorText = (TextView)v.findViewById(R.id.error_text);
+        mErrorContainer = v.findViewById(R.id.error_container);
+        mProgress = (ProgressBar) v.findViewById(R.id.progress);
         return v;
+    }
+
+    private void registerReceivers(){
+        IntentFilter externalFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        mActivity.registerReceiver(mMainFragmentReceiver, externalFilter);
+        IntentFilter internalFilter =
+                new IntentFilter(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED);
+        internalFilter.addAction(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN);
+        mLocalMgr.registerReceiver(mMainFragmentReceiver, internalFilter);
+    }
+
+    private void unregisterReceivers(){
+        mActivity.unregisterReceiver(mMainFragmentReceiver);
+        mLocalMgr.unregisterReceiver(mMainFragmentReceiver);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        registerReceivers();
+        checkNetworkConnectivity();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        unregisterReceivers();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.main, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.action_settings:
+                launchSettingsActivity();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -131,14 +208,18 @@ public class MainFragment extends Fragment
         mActivity = null;
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void launchSettingsActivity(){
+        startActivity(new Intent(getActivity(), SettingsActivity.class));
+    }
 
-        Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
-                .appendPath(MainActivity.PATH_STATION)
-                .appendPath(Integer.toString(position))
-                .build();
-
-        mActivity.onFragmentInteraction(stationUri);
+    private void checkNetworkConnectivity(){
+        if(NetworkUtils.hasNetworkConnectivity(mActivity)){
+            mListView.setVisibility(View.VISIBLE);
+            mErrorContainer.setVisibility(View.GONE);
+            //RadioRedditSyncAdapter.syncImmediately(mActivity);
+        } else {
+            mListView.setVisibility(View.GONE);
+            mErrorContainer.setVisibility(View.VISIBLE);
+        }
     }
 }

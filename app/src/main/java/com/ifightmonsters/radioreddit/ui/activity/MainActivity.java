@@ -21,7 +21,8 @@ import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.fragment.MainFragment;
 
 
-public class MainActivity extends ActionBarActivity implements OnFragmentInteractionListener, SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends ActionBarActivity
+        implements SwipeRefreshLayout.OnRefreshListener {
 
     //TODO Implement a network check
     private static final String LOG = "MainActivity";
@@ -37,7 +38,7 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
     private static UriMatcher sUriMatcher = buildUriMatcher();
 
     private LocalBroadcastManager mLocalBroadcastMgr;
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver(){
+    private final BroadcastReceiver mMainActivityReceiver = new BroadcastReceiver(){
         @Override
         public void onReceive(Context context, Intent intent) {
             if(context == null || intent == null){
@@ -73,10 +74,6 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
 
                 int message = extras.getInt(RadioService.EXTRA_STATUS);
                 setActionBarTitle(message);
-            }
-
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
-                //TODO Turn off refreshing
             }
         }
     };
@@ -115,7 +112,6 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
     protected void onStart() {
         super.onStart();
         registerReceivers();
-        RadioRedditSyncAdapter.syncImmediately(this);
     }
 
     @Override
@@ -125,16 +121,15 @@ public class MainActivity extends ActionBarActivity implements OnFragmentInterac
     }
 
     private void registerReceivers(){
-        IntentFilter filter = new IntentFilter(RadioService.BROADCAST_ERROR);
-        filter.addAction(RadioService.BROADCAST_STATUS);
-        mLocalBroadcastMgr.registerReceiver(mBroadcastReceiver, filter);
+        IntentFilter localFilter = new IntentFilter(RadioService.BROADCAST_ERROR);
+        localFilter.addAction(RadioService.BROADCAST_STATUS);
+        mLocalBroadcastMgr.registerReceiver(mMainActivityReceiver, localFilter);
     }
 
     private void unregisterReceivers(){
-        mLocalBroadcastMgr.unregisterReceiver(mBroadcastReceiver);
+        mLocalBroadcastMgr.unregisterReceiver(mMainActivityReceiver);
     }
 
-    @Override
     public void onFragmentInteraction(Uri uri) {
 
         final int match = sUriMatcher.match(uri);
