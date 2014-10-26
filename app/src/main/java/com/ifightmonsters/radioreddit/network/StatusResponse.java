@@ -17,6 +17,10 @@ public class StatusResponse extends BaseResponse {
 
     private Status status;
 
+    public StatusResponse(Exception e){
+        super(e);
+    }
+
     public StatusResponse(Response response){
         super(response);
         Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Status.class, new StatusTypeAdapter()).create();

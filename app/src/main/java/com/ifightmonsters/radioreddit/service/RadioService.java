@@ -228,6 +228,9 @@ public class RadioService extends Service implements
         switch(extra){
             case MediaPlayer.MEDIA_ERROR_IO:
                 Log.e(LOG, "Media Player IO Error");
+                Intent errorIntent = new Intent(BROADCAST_ERROR);
+                errorIntent.putExtra(EXTRA_ERROR, "Network error, please your connection!");
+                mLocalBroadcastMgr.sendBroadcast(errorIntent);
                 break;
             case MediaPlayer.MEDIA_ERROR_MALFORMED:
                 Log.e(LOG, "Media Player Malformed");
@@ -399,9 +402,7 @@ public class RadioService extends Service implements
 
     private void broadcastError(int stringRes){
         Intent intent = new Intent(BROADCAST_ERROR);
-        Bundle extras = new Bundle();
-        extras.putInt(EXTRA_ERROR, stringRes);
-        intent.putExtras(extras);
+        intent.putExtra(EXTRA_ERROR, stringRes);
         mLocalBroadcastMgr.sendBroadcast(intent);
     }
 
@@ -496,11 +497,7 @@ public class RadioService extends Service implements
         }
 
         if(!NetworkUtils.hasNetworkConnectivity(this)){
-            Intent errorIntent = new Intent(BROADCAST_ERROR);
-            Bundle args = new Bundle();
-            args.putString(EXTRA_ERROR, "No network connectivity");
-            errorIntent.putExtras(args);
-            mLocalBroadcastMgr.sendBroadcast(errorIntent);
+            broadcastError(R.string.error_connectivity);
             killService();
             return;
         }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_color_normal">@android:color/black</color>
-    <color name="text_color_activated">@android:color/white</color>
+    <color name="text_station_color_normal">@android:color/black</color>
+    <color name="text_station_color_activated">@android:color/white</color>
+    <color name="text_clickable_normal">#00c0c0</color>
+    <color name="text_clickable_pressed">#e31e1e</color>
 </resources>

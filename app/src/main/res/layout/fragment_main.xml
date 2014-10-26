@@ -46,7 +46,17 @@
             android:textColor="@android:color/black"
             android:layout_marginTop="5dp"
             android:layout_centerHorizontal="true"
-            android:text="@string/error_connectivity"
+            android:text="@string/error_message_connectivity"
+            android:textAlignment="center"/>
+        <TextView
+            android:id="@+id/nav_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/error_text"
+            android:layout_marginTop="5dp"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/clickable_text"
+            android:text="@string/solution_fix_connectivity"
             android:textAlignment="center"/>
     </RelativeLayout>
 </LinearLayout>

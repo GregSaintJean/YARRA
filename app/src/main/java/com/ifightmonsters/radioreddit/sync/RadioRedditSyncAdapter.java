@@ -12,9 +12,11 @@ import android.content.Intent;
 import android.content.SyncResult;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.ifightmonsters.radioreddit.MainApp;
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.data.RadioRedditContract;
 import com.ifightmonsters.radioreddit.entities.Song;
@@ -33,7 +35,6 @@ import java.util.LinkedList;
 public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String LOG = "RadioRedditSyncAdapter";
-
 
     public static final String BROADCAST_SYNC_BEGIN
             = "com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter.broadcast.sync_begin";
@@ -55,7 +56,7 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
             ContentProviderClient provider,
             SyncResult syncResult) {
 
-        ContentResolver resolver = getContext().getContentResolver();
+        mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_BEGIN));
 
         LinkedList<BaseResponse> responses = new LinkedList<BaseResponse>();
         responses.add(RadioReddit.getMainStatus());
@@ -67,22 +68,30 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         responses.add(RadioReddit.getRandomStatus());
         responses.add(RadioReddit.getTalkStatus());
 
-        purgeDatabases(resolver);
-        commitResponses(responses, resolver);
-        Log.i(LOG, "sync completed");
+        try{
+            purgeDatabases(provider);
+            commitResponses(responses, provider);
+            MainApp app = (MainApp)getContext().getApplicationContext();
+            app.setSyncTimestamp();
+        } catch(RemoteException e){
+            Log.e(LOG, e.toString());
+        }
+
         mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_COMPLETED));
     }
 
-    private void purgeDatabases(ContentResolver resolver){
-        resolver.delete(RadioRedditContract.Song.CONTENT_URI, null, null);
-        resolver.delete(RadioRedditContract.Status.CONTENT_URI, null, null);
+    private void purgeDatabases(ContentProviderClient provider) throws RemoteException{
+        provider.delete(RadioRedditContract.Song.CONTENT_URI, null, null);
+        provider.delete(RadioRedditContract.Status.CONTENT_URI, null, null);
     }
 
-    private void commitResponses(LinkedList<BaseResponse> responses, ContentResolver resolver){
+    private void commitResponses(LinkedList<BaseResponse> responses, ContentProviderClient provider)
+            throws RemoteException{
 
+        //TODO I might have to handle a case where this can be null.
         for(BaseResponse response : responses){
 
-            if(response.getCode() !=  200){
+            if(!response.isSuccessful()){
                 continue;
             }
 
@@ -101,7 +110,7 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
             statusValues.put(RadioRedditContract.Status.COLUMN_ALL_LISTENERS, status.getAll_listeners());
             statusValues.put(RadioRedditContract.Status.COLUMN_PLAYLIST, status.getPlaylist());
 
-            Uri insertUri = resolver.insert(RadioRedditContract.Status.CONTENT_URI, statusValues);
+            Uri insertUri = provider.insert(RadioRedditContract.Status.CONTENT_URI, statusValues);
 
             if(response instanceof StatusResponse){
 
@@ -133,11 +142,19 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
                     values[count++] = songValue;
                 }
 
-                resolver.bulkInsert(RadioRedditContract.Song.CONTENT_URI, values);
+                provider.bulkInsert(RadioRedditContract.Song.CONTENT_URI, values);
             }
 
         }
 
+    }
+
+    public static void setupPeriodicSync(Context ctx, long pollFrequency){
+        ContentResolver.addPeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), null, pollFrequency);
+    }
+
+    public static void removePeriodicSync(Context ctx){
+        ContentResolver.removePeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), null);
     }
 
     public static void syncImmediately(Context ctx){

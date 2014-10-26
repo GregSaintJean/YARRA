@@ -52,9 +52,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getElectronicStatus(){
@@ -66,9 +65,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getIndieStatus(){
@@ -80,9 +78,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getHipHopStatus(){
@@ -94,9 +91,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getRockStatus(){
@@ -108,9 +104,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getMetalStatus(){
@@ -122,9 +117,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     public static TalkResponse getTalkStatus(){
@@ -136,9 +130,8 @@ public final class RadioReddit {
             return new TalkResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new TalkResponse(e);
         }
-
-        return null;
     }
 
     public static StatusResponse getRandomStatus(){
@@ -150,9 +143,8 @@ public final class RadioReddit {
             return new StatusResponse(WebServices.getClientInstance().newCall(request).execute());
         } catch(IOException e){
             Log.i(LOG, e.toString());
+            return new StatusResponse(e);
         }
-
-        return null;
     }
 
     private RadioReddit(){}

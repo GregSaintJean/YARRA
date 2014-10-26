@@ -17,6 +17,10 @@ public class TalkResponse extends BaseResponse {
 
     private Status status;
 
+    public TalkResponse(Exception e){
+        super(e);
+    }
+
     public TalkResponse(Response response){
         super(response);
         Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Status.class, new TalkTypeAdapter()).create();

@@ -1,8 +1,11 @@
 package com.ifightmonsters.radioreddit;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 
 import com.ifightmonsters.radioreddit.utils.ChronoUtils;
+
+import java.util.Date;
 
 /**
  * Created by Gregory on 10/4/2014.
@@ -15,21 +18,28 @@ public class MainApp extends Application {
             ChronoUtils.SECONDS_PER_MINUTE *
             ChronoUtils.MILLISECONDS_PER_SECOND;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        /*ContentResolver resolver = getContentResolver();
+    public final Date getLastSyncTimestamp(){
+        SharedPreferences pref
+                = this.getSharedPreferences(getString(R.string.pref_app), MODE_PRIVATE);
 
-        Account account =
-                new Account(
-                        getString(R.string.radio_reddit_account),
-                        getString(R.string.sync_account_type));
+        String timestampDateString = pref.getString(getString(R.string.sync_timestamp), null);
 
+        if(timestampDateString == null){
+            return null;
+        }
 
-        resolver.addPeriodicSync(account, getString(R.string.content_authority), null, DEFAULT_SYNC_INTERVAL);*/
+        Date timestampDate = ChronoUtils.generateDate(timestampDateString);
+        return timestampDate;
     }
 
-    public final boolean isFirstRun(){
-        return false;
+    public final void setSyncTimestamp(){
+        SharedPreferences pref
+                = this.getSharedPreferences(getString(R.string.pref_app), MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = pref.edit();
+        Date currentDate = ChronoUtils.getCurrentDate();
+        String storageDate = ChronoUtils.getStorageFormattedDate(currentDate);
+        editor.putString(getString(R.string.sync_timestamp), storageDate);
+        editor.commit();
     }
 }

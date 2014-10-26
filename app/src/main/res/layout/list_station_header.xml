@@ -2,6 +2,6 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_horizontal"
-    android:visibility="gone"
-    android:text="This is header text"/>
+    android:background="@android:color/white"
+    android:padding="5dp"
+    android:gravity="center_horizontal"/>
