@@ -1,5 +1,6 @@
 package com.ifightmonsters.radioreddit.service;
 
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -15,6 +16,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -23,7 +25,10 @@ import android.util.Log;
 
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.network.RadioReddit;
+import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
+import com.ifightmonsters.radioreddit.utils.ChronoUtils;
+import com.ifightmonsters.radioreddit.utils.NetworkUtils;
 
 import java.io.IOException;
 
@@ -36,10 +41,12 @@ public class RadioService extends Service implements
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener{
 
-    //TODO Implement a network check
-
     private static final String LOG = "RadioService";
     private static final String LOCK = "RadioServiceLock";
+
+    private static final long RESYNC_INTERVAL_IN_MINUTES = 4L;
+    private static final long RESYNC_INTERVAL
+            = RESYNC_INTERVAL_IN_MINUTES * ChronoUtils.SECONDS_PER_MINUTE;
 
     private static final String ACTION
             = "com.ifightmonsters.radioreddit.service.RadioService.action";
@@ -48,6 +55,7 @@ public class RadioService extends Service implements
     private static final String BROADCAST
             = "com.ifightmonsters.radioreddit.service.RadioService.broadcast";
 
+    private static final String ACTION_SYNC = ACTION + ".sync";
     public static final String ACTION_PLAY = ACTION + ".play";
     public static final String ACTION_STOP = ACTION + ".stop";
     public static final String BROADCAST_ERROR = BROADCAST + ".error";
@@ -60,6 +68,8 @@ public class RadioService extends Service implements
     public static final String EXTRA_HEADSET_STATE = "state";
     public static final String EXTRA_HEADSET_NAME = "name";
     public static final String EXTRA_HEADSET_MICROPHONE = "microphone";
+
+    private static final int SYNC_REQUEST_CODE = 1;
 
     private static final float DUCK_VOLUME = 0.1f;
     private static final int NOTIFY_ID = 1;
@@ -79,6 +89,7 @@ public class RadioService extends Service implements
     private static final int STATE_STOPPED = 3;
     private static final int STATE_ERROR = 4;
     private static final int STATE_AUDIO_FOCUS_LOST = 5;
+    private static final int STATE_RETRIEVING = 6;
 
     private static final int FOCUS_FOCUSED = 0;
     private static final int FOCUS_NOT_FOCUSED_DUCK = 1;
@@ -116,12 +127,20 @@ public class RadioService extends Service implements
         }
     };
 
+    private final PendingIntent mPendingSyncIntent =
+            PendingIntent.getService(
+                    this,
+                    SYNC_REQUEST_CODE,
+                    new Intent(ACTION_SYNC),
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+
     private static RadioService sInstance;
     private MediaPlayer mPlayer;
     private NotificationManager mNotificationMgr;
     private WifiManager.WifiLock mWifiLock;
     private AudioManager mAudioManager;
     private LocalBroadcastManager mLocalBroadcastMgr;
+    private AlarmManager mAlarmMgr;
 
     @Override
     public void onCreate() {
@@ -131,6 +150,7 @@ public class RadioService extends Service implements
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, LOCK);
         mNotificationMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        mAlarmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
         registerReceivers();
     }
@@ -178,6 +198,9 @@ public class RadioService extends Service implements
         } else if(action.equals(ACTION_STOP)){
             Log.d(LOG, "Received stop action");
             handleStopAction();
+        } else if(action.equals(ACTION_SYNC)){
+            Log.d(LOG, "Received sync action");
+            handleSyncAction();
         }
 
         return START_NOT_STICKY;
@@ -204,7 +227,6 @@ public class RadioService extends Service implements
 
         switch(extra){
             case MediaPlayer.MEDIA_ERROR_IO:
-                //TODO This most likely means that it's not connected to the network. Yea, I need a network check.
                 Log.e(LOG, "Media Player IO Error");
                 break;
             case MediaPlayer.MEDIA_ERROR_MALFORMED:
@@ -473,6 +495,16 @@ public class RadioService extends Service implements
             }
         }
 
+        if(!NetworkUtils.hasNetworkConnectivity(this)){
+            Intent errorIntent = new Intent(BROADCAST_ERROR);
+            Bundle args = new Bundle();
+            args.putString(EXTRA_ERROR, "No network connectivity");
+            errorIntent.putExtras(args);
+            mLocalBroadcastMgr.sendBroadcast(errorIntent);
+            killService();
+            return;
+        }
+
         mCurrentStation = station.intValue();
 
         //TODO Here you might actually want to acquire the stream data to stream
@@ -485,6 +517,10 @@ public class RadioService extends Service implements
         }
 
         killService();
+    }
+
+    private void handleSyncAction(){
+        RadioRedditSyncAdapter.syncImmediately(this);
     }
 
     @Override
@@ -526,5 +562,20 @@ public class RadioService extends Service implements
             }
         }
 
+    }
+
+    //TODO use these methods
+    private void startSyncInterval(){
+        mAlarmMgr.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + RESYNC_INTERVAL,
+                RESYNC_INTERVAL,
+                mPendingSyncIntent
+        );
+    }
+
+    //TODO use these methods
+    private void stopSyncInterval(){
+        mAlarmMgr.cancel(mPendingSyncIntent);
     }
 }

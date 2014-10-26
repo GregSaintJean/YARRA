@@ -9,7 +9,6 @@ import android.content.UriMatcher;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -17,14 +16,11 @@ import android.widget.Toast;
 
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.service.RadioService;
-import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.fragment.MainFragment;
 
 
-public class MainActivity extends ActionBarActivity
-        implements SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends ActionBarActivity{
 
-    //TODO Implement a network check
     private static final String LOG = "MainActivity";
 
     private static final String ACTIVITY_AUTHORITY = "com.ifightmonsters.radioreddit.ui.activity.MainActivity";
@@ -156,10 +152,5 @@ public class MainActivity extends ActionBarActivity
         RadioService.play(this, (int)id);
         mCurrentStation = id;
 
-    }
-
-    @Override
-    public void onRefresh() {
-        RadioRedditSyncAdapter.syncImmediately(this);
     }
 }

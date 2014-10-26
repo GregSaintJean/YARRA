@@ -6,23 +6,40 @@
     android:layout_height="wrap_content"
     android:background="@drawable/station_item"
     android:padding="10dp">
-    <TextView
-        android:id="@+id/station_name"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/station_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:textColor="@color/station_item_text_color"/>
+        android:padding="10dp">
+        <TextView
+            android:id="@+id/station_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:textColor="@color/station_item_text_color"
+            android:text="Main"/>
+        <ImageButton
+            android:id="@+id/toggle_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/ic_play"/>
+    </RelativeLayout>
     <TextView
         android:id="@+id/artist_name"
         android:layout_width="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@id/station_name"
+        android:layout_below="@id/station_container"
         android:ellipsize="marquee"
         android:maxLength="@integer/max_station_list_text_length"
         android:singleLine="true"
         android:textColor="@color/station_item_text_color"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="Artist: Three Days Grace"/>
     <TextView
         android:id="@+id/song_name"
         android:layout_width="wrap_content"
@@ -33,22 +50,16 @@
         android:ellipsize="marquee"
         android:singleLine="true"
         android:textColor="@color/station_item_text_color"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:text="Song: Days Days Days"/>
     <TextView
         android:id="@+id/score"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/toggle_btn"
+        android:layout_below="@id/song_name"
+        android:layout_alignParentLeft="true"
         android:ellipsize="marquee"
         android:singleLine="true"
         android:textColor="@color/station_item_text_color"
-        android:layout_centerVertical="true"/>
-    <ImageButton
-        android:id="@id/toggle_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="15dp"/>
+        android:text="Score: 100"/>
 </RelativeLayout>

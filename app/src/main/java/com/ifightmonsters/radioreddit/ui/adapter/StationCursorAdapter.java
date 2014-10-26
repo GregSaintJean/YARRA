@@ -2,7 +2,6 @@ package com.ifightmonsters.radioreddit.ui.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -15,6 +14,7 @@ import android.widget.TextView;
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.data.RadioRedditDbHelper;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
+import com.ifightmonsters.radioreddit.ui.fragment.MainFragment;
 
 public class StationCursorAdapter extends CursorAdapter {
 
@@ -43,10 +43,7 @@ public class StationCursorAdapter extends CursorAdapter {
 
         final MainActivity activity = (MainActivity) context;
 
-       String station_name = String.format(context.getString(R.string.station_name),
-                mStation[cursor.getPosition()]);
-
-        ((TextView)view.findViewById(R.id.station_name)).setText(station_name);
+        ((TextView)view.findViewById(R.id.station_name)).setText(mStation[cursor.getPosition()]);
 
         String artist_name = String.format(context.getString(R.string.artist_name),
                 cursor.getString(RadioRedditDbHelper.SONG_COLUMN_ARTIST));
@@ -71,17 +68,7 @@ public class StationCursorAdapter extends CursorAdapter {
             toggleBtn.setImageResource(R.drawable.ic_play);
         }
 
-        toggleBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
-                        .appendPath(MainActivity.PATH_STATION)
-                        .appendPath(Integer.toString(position))
-                        .build();
-
-                activity.onFragmentInteraction(stationUri);
-            }
-        });
+        toggleBtn.setOnClickListener(new MainFragment.StationClickListener(activity, position));
 
     }
 }

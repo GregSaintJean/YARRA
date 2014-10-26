@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -32,16 +33,14 @@ import com.ifightmonsters.radioreddit.ui.activity.SettingsActivity;
 import com.ifightmonsters.radioreddit.ui.adapter.StationCursorAdapter;
 import com.ifightmonsters.radioreddit.utils.NetworkUtils;
 
-public class MainFragment extends Fragment
-        implements
-        LoaderManager.LoaderCallbacks<Cursor>{
+public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String LOG = "MainFragment";
 
     private static final String OUTPUT_TV_KEY = "output_tv";
     private String songSortOrder = RadioRedditContract.Song.COLUMN_STATUS_ID + " DESC";
 
-    private static final String[] SONG_COLUMNS = {
+    private static final String[] SONG_PROJECTION = {
             RadioRedditContract.Song.TABLE_NAME + "." + RadioRedditContract.Song._ID,
             RadioRedditContract.Song.COLUMN_REDDIT_ID,
             RadioRedditContract.Song.COLUMN_STATUS_ID,
@@ -89,6 +88,7 @@ public class MainFragment extends Fragment
     };
 
     private int SONG_LOADER = 0;
+    private boolean mHasConnectivity = false;
 
     private MainActivity mActivity;
     private ListView mListView;
@@ -171,10 +171,19 @@ public class MainFragment extends Fragment
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.findItem(R.id.action_refresh).setVisible(mHasConnectivity);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()){
             case R.id.action_settings:
                 launchSettingsActivity();
+                return true;
+            case R.id.action_refresh:
+                RadioRedditSyncAdapter.syncImmediately(mActivity);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -186,7 +195,7 @@ public class MainFragment extends Fragment
         return new CursorLoader(
                 getActivity(),
                 RadioRedditContract.Song.CONTENT_URI,
-                SONG_COLUMNS,
+                SONG_PROJECTION,
                 null,
                 null,
                 songSortOrder);
@@ -216,10 +225,36 @@ public class MainFragment extends Fragment
         if(NetworkUtils.hasNetworkConnectivity(mActivity)){
             mListView.setVisibility(View.VISIBLE);
             mErrorContainer.setVisibility(View.GONE);
-            //RadioRedditSyncAdapter.syncImmediately(mActivity);
+            mHasConnectivity = true;
         } else {
             mListView.setVisibility(View.GONE);
             mErrorContainer.setVisibility(View.VISIBLE);
+            mHasConnectivity = false;
         }
+
+        mActivity.invalidateOptionsMenu();
+    }
+
+    public static class StationClickListener implements View.OnClickListener{
+
+        private MainActivity mContext;
+        private int mPosition;
+
+        public StationClickListener(Context ctx, int position){
+            mPosition = position;
+            mContext = (MainActivity)ctx;
+        }
+
+        @Override
+        public void onClick(View v) {
+
+            Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
+                    .appendPath(MainActivity.PATH_STATION)
+                    .appendPath(Integer.toString(mPosition))
+                    .build();
+            mContext.onFragmentInteraction(stationUri);
+
+        }
+
     }
 }

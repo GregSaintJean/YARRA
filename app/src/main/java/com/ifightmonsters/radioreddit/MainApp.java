@@ -9,9 +9,9 @@ import com.ifightmonsters.radioreddit.utils.ChronoUtils;
  */
 public class MainApp extends Application {
 
-    public static final long SYNC_INTERVAL_IN_MINUTES = 20L;
-    public static final long SYNC_INTERVAL
-            = SYNC_INTERVAL_IN_MINUTES *
+    private static final long DEFAULT_SYNC_INTERVAL_IN_MINUTES = 20L;
+    public static final long DEFAULT_SYNC_INTERVAL
+            = DEFAULT_SYNC_INTERVAL_IN_MINUTES *
             ChronoUtils.SECONDS_PER_MINUTE *
             ChronoUtils.MILLISECONDS_PER_SECOND;
 
@@ -26,7 +26,7 @@ public class MainApp extends Application {
                         getString(R.string.sync_account_type));
 
 
-        resolver.addPeriodicSync(account, getString(R.string.content_authority), null, SYNC_INTERVAL);*/
+        resolver.addPeriodicSync(account, getString(R.string.content_authority), null, DEFAULT_SYNC_INTERVAL);*/
     }
 
     public final boolean isFirstRun(){
