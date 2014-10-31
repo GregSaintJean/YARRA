@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="max_station_list_text_length">25</integer>
-    <string name="first_launch">first_launch</string>
-    <string name="pref_app">radio_reddit</string>
-    <string name="sync_timestamp">sync_timestamp</string>
+    <string name="first_launch" translatable="false">first_launch</string>
+    <string name="sync_timestamp" translatable="false">sync_timestamp</string>
+
+    <string name="pref_sync_interval" translatable="false">sync_interval</string>
+
+    <integer name="default_sync_interval">1200</integer>
+    <integer name="default_flextime_interval">600</integer>
 
     <!-- Sync account information -->
-    <string name="sync_account_type">radioreddit.ifightmonsters.com</string>
-    <string name="content_authority">com.ifightmonsters.radioreddit</string>
-    <string name="radio_reddit_account">Radio Reddit</string>
+    <string name="sync_account_type" translatable="false">radioreddit.ifightmonsters.com</string>
+    <string name="content_authority" translatable="false">com.ifightmonsters.radioreddit</string>
+    <string name="radio_reddit_account" translatable="false">Radio Reddit</string>
+
+    <array name="station_banners">
+        <item>@drawable/card_main</item>
+        <item>@drawable/card_electronic</item>
+        <item>@drawable/card_indie</item>
+        <item>@drawable/card_hiphop</item>
+        <item>@drawable/card_rock</item>
+        <item>@drawable/card_metal</item>
+        <item>@drawable/card_random</item>
+    </array>
 </resources>

@@ -25,7 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activity.SettingsActivity"/>
+        <activity
+            android:name=".ui.activity.SettingsActivity"
+            android:label="@string/title_activity_settings"/>
 
         <service android:name=".service.RadioService" />
 
@@ -44,6 +46,8 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
+
+        <!-- Sync Adapter Service -->
         <service
             android:name=".sync.RadioRedditSyncService"
             android:exported="true" >

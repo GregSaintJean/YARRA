@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Radio Reddit</string>
+    <string name="app_name">Yet Another Radio Reddit App</string>
+
+    <string name="title_activity_settings">Settings</string>
 
     <string name="btn_play">Play</string>
     <string name="btn_stop">Stop</string>
@@ -19,7 +21,9 @@
 
     <string name="error_message_connectivity">Network connection lost!</string>
     <string name="error_connectivity">No network connectivity</string>
+    <string name="error_no_station_data">No station data available. Please sync data before playing the radio.</string>
     <string name="solution_fix_connectivity">Touch here to check wifi settings</string>
+
 
     <string name="sync_status_last_updated">Last updated: %1$s</string>
     <string name="sync_status_never">Never synced! Please touch refresh to sync data</string>
@@ -32,12 +36,15 @@
         <item>Hip-Hop</item>
         <item>Rock</item>
         <item>Metal</item>
-        <item>Talk</item>
         <item>Random</item>
+        <item>Talk</item>
     </string-array>
 
     <string name="error_unknown">Unknown error.</string>
     <string name="error_station_uri">Unable to set station URI</string>
     <string name="error_empty_intent">An empty intent was sent to the radio service.</string>
+
+    <string name="pref_title_sync_interval">Sync Interval</string>
+    <string name="pref_summ_sync_interval">How often you wish for the app to get the latest station info from Radio Reddit servers (in seconds).</string>
 
 </resources>

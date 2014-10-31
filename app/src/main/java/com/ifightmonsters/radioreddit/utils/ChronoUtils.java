@@ -1,10 +1,12 @@
 package com.ifightmonsters.radioreddit.utils;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -16,9 +18,6 @@ public final class ChronoUtils {
 
     public static final long MILLISECONDS_PER_SECOND = 1000L;
     public static final long SECONDS_PER_MINUTE = 60L;
-    public static final long MINUTES_PER_HOUR = 60L;
-    public static final long HOURS_PER_DAY = 24L;
-    public static final long DAYS_PER_WEEK = 7L;
 
     private static final String STORE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -32,6 +31,14 @@ public final class ChronoUtils {
 
     public static final Date getCurrentDate(){
         return new Date();
+    }
+
+    public static final boolean isDateOldEnough(Context ctx, Date oldDate, long interval){
+
+        Calendar oldCal = Calendar.getInstance();
+        oldCal.setTime(oldDate);
+
+        return Calendar.getInstance().getTimeInMillis() - oldCal.getTimeInMillis() > interval;
     }
 
     public static final Date generateDate(String timestamp){

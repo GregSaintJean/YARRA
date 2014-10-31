@@ -2,6 +2,8 @@ package com.ifightmonsters.radioreddit;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.text.TextUtils;
 
 import com.ifightmonsters.radioreddit.utils.ChronoUtils;
 
@@ -12,19 +14,25 @@ import java.util.Date;
  */
 public class MainApp extends Application {
 
-    private static final long DEFAULT_SYNC_INTERVAL_IN_MINUTES = 20L;
-    public static final long DEFAULT_SYNC_INTERVAL
-            = DEFAULT_SYNC_INTERVAL_IN_MINUTES *
-            ChronoUtils.SECONDS_PER_MINUTE *
-            ChronoUtils.MILLISECONDS_PER_SECOND;
+    public final boolean isFirstRun(){
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean(getString(R.string.first_launch), true);
+    }
+
+    public final boolean setFirstRun(){
+        SharedPreferences.Editor editor
+                = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putBoolean(getString((R.string.first_launch)), false);
+        return editor.commit();
+    }
 
     public final Date getLastSyncTimestamp(){
-        SharedPreferences pref
-                = this.getSharedPreferences(getString(R.string.pref_app), MODE_PRIVATE);
+        SharedPreferences sharedPref
+                = PreferenceManager.getDefaultSharedPreferences(this);
 
-        String timestampDateString = pref.getString(getString(R.string.sync_timestamp), null);
+        String timestampDateString = sharedPref.getString(getString(R.string.sync_timestamp), "");
 
-        if(timestampDateString == null){
+        if(TextUtils.isEmpty(timestampDateString)){
             return null;
         }
 
@@ -33,10 +41,10 @@ public class MainApp extends Application {
     }
 
     public final void setSyncTimestamp(){
-        SharedPreferences pref
-                = this.getSharedPreferences(getString(R.string.pref_app), MODE_PRIVATE);
+        SharedPreferences sharedPref
+                = PreferenceManager.getDefaultSharedPreferences(this);
 
-        SharedPreferences.Editor editor = pref.edit();
+        SharedPreferences.Editor editor = sharedPref.edit();
         Date currentDate = ChronoUtils.getCurrentDate();
         String storageDate = ChronoUtils.getStorageFormattedDate(currentDate);
         editor.putString(getString(R.string.sync_timestamp), storageDate);

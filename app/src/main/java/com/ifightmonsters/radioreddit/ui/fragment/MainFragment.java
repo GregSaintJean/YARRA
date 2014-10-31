@@ -5,11 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.TypedArray;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -19,34 +19,29 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.ifightmonsters.radioreddit.MainApp;
 import com.ifightmonsters.radioreddit.R;
 import com.ifightmonsters.radioreddit.data.RadioRedditContract;
 import com.ifightmonsters.radioreddit.data.RadioRedditDbHelper;
-import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
+import com.ifightmonsters.radioreddit.service.RadioService;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
-import com.ifightmonsters.radioreddit.ui.activity.SettingsActivity;
-import com.ifightmonsters.radioreddit.utils.ChronoUtils;
-import com.ifightmonsters.radioreddit.utils.NetworkUtils;
 
-import java.util.Date;
+public class MainFragment extends Fragment
+        implements
+        LoaderManager.LoaderCallbacks<Cursor>,
+        AdapterView.OnItemClickListener{
 
-public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
-
-    private static final String LOG = "MainFragment";
-
-    private static final String OUTPUT_TV_KEY = "output_tv";
     private String songSortOrder = RadioRedditContract.Song.COLUMN_STATUS_ID + " DESC";
+
+    private int mCurrentSelection = -1;
 
     private static final String[] SONG_PROJECTION = {
             RadioRedditContract.Song.TABLE_NAME + "." + RadioRedditContract.Song._ID,
@@ -80,31 +75,23 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                 return;
             }
 
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
-                mSyncIndicator.setText(getLastSyncTimeStamp());
-            }
-
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN)){
-                mSyncIndicator.setText(R.string.sync_status_syncing);
-            }
-
-            if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
-                checkNetworkConnectivity();
+            if(action.equals(RadioService.BROADCAST_KILLED)){
+                if(mListView != null){
+                    mListView.setItemChecked(mCurrentSelection, false);
+                } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    mGridView.setItemChecked(mCurrentSelection, false);
+                }
             }
 
         }
     };
 
     private int SONG_LOADER = 0;
-    private boolean mHasConnectivity = false;
 
     private MainApp mApp;
-    private TextView mSyncIndicator;
-    private TextView mNavTextView;
     private MainActivity mActivity;
     private ListView mListView;
-    private View mErrorContainer;
-    private ProgressBar mProgress;
+    private GridView mGridView;
     private CursorAdapter mAdapter;
 
     public static MainFragment newInstance(){
@@ -129,8 +116,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocalMgr = LocalBroadcastManager.getInstance(mActivity);
-        mApp =  (MainApp)mActivity.getApplication();
-        setHasOptionsMenu(true);
+        mApp = (MainApp)mActivity.getApplication();
     }
 
     @Override
@@ -138,30 +124,27 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_main, container, false);
-        mListView = (ListView)v.findViewById(R.id.list);
-        mSyncIndicator = (TextView)inflater.inflate(R.layout.list_station_header, null, false);
-        mSyncIndicator.setText(getLastSyncTimeStamp());
-        mListView.addHeaderView(mSyncIndicator);
         mAdapter = new StationCursorAdapter(mActivity, null, false);
-        mListView.setAdapter(mAdapter);
-        mErrorContainer = v.findViewById(R.id.error_container);
-        mProgress = (ProgressBar)v.findViewById(R.id.progress);
-        mNavTextView = (TextView)v.findViewById(R.id.nav_text);
-        mNavTextView.setOnClickListener(this);
+        View lister = v.findViewById(R.id.list);
+
+        if(lister == null){
+            mGridView = (GridView)v.findViewById(R.id.grid);
+            mGridView.setAdapter(mAdapter);
+            mGridView.setOnItemClickListener(this);
+        } else{
+            mListView = (ListView)v.findViewById(R.id.list);
+            mListView.setAdapter(mAdapter);
+            mListView.setOnItemClickListener(this);
+        }
         return v;
     }
 
     private void registerReceivers(){
-        mActivity.registerReceiver(mMainFragmentReceiver,
-                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        IntentFilter internalFilter =
-                new IntentFilter(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED);
-        internalFilter.addAction(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN);
+        IntentFilter internalFilter = new IntentFilter(RadioService.BROADCAST_KILLED);
         mLocalMgr.registerReceiver(mMainFragmentReceiver, internalFilter);
     }
 
     private void unregisterReceivers(){
-        mActivity.unregisterReceiver(mMainFragmentReceiver);
         mLocalMgr.unregisterReceiver(mMainFragmentReceiver);
     }
 
@@ -169,38 +152,12 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onStart() {
         super.onStart();
         registerReceivers();
-        checkNetworkConnectivity();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         unregisterReceivers();
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.main, menu);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        menu.findItem(R.id.action_refresh).setVisible(mHasConnectivity);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
-            case R.id.action_settings:
-                launchSettingsActivity();
-                return true;
-            case R.id.action_refresh:
-                RadioRedditSyncAdapter.syncImmediately(mActivity);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
@@ -225,51 +182,38 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mListView = null;
+        mGridView = null;
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mActivity = null;
     }
 
-    public void launchWifiSettingsActivity(){
-        startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-    }
-
-    public void launchSettingsActivity(){
-        startActivity(new Intent(getActivity(), SettingsActivity.class));
-    }
-
-    private void checkNetworkConnectivity(){
-        if(NetworkUtils.hasNetworkConnectivity(mActivity)){
-            mListView.setVisibility(View.VISIBLE);
-            mErrorContainer.setVisibility(View.GONE);
-            mHasConnectivity = true;
-        } else {
-            mListView.setVisibility(View.GONE);
-            mErrorContainer.setVisibility(View.VISIBLE);
-            mHasConnectivity = false;
-        }
-
-        mActivity.invalidateOptionsMenu();
-    }
-
     @Override
-    public void onClick(View v) {
-        if(v.getId() == R.id.nav_text){
-            launchWifiSettingsActivity();
-        }
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
+                .appendPath(MainActivity.PATH_STATION)
+                .appendPath(Integer.toString(position))
+                .build();
+
+        mActivity.onFragmentInteraction(stationUri);
+        mCurrentSelection = position;
     }
 
     public class StationCursorAdapter extends CursorAdapter{
 
+        private TypedArray mStationArray;
         private String[] mStation;
 
         public StationCursorAdapter(Context context, Cursor c, boolean autoRequery) {
             super(context, c, autoRequery);
             mStation = context.getResources().getStringArray(R.array.stations);
-        }
-
-        public StationCursorAdapter(Context context, Cursor c, int flags) {
-            super(context, c, flags);
+            mStationArray = getResources().obtainTypedArray(R.array.station_banners);
         }
 
         @Override
@@ -282,7 +226,10 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
             final int position = cursor.getPosition();
 
-            ((TextView)view.findViewById(R.id.station_name)).setText(mStation[cursor.getPosition()]);
+            ((ImageView)view.findViewById(R.id.card_banner))
+                    .setImageDrawable(mStationArray.getDrawable(position));
+
+            ((TextView) view.findViewById(R.id.station_name)).setText(mStation[cursor.getPosition()]);
 
             String artist_name = String.format(context.getString(R.string.artist_name),
                     cursor.getString(RadioRedditDbHelper.SONG_COLUMN_ARTIST));
@@ -297,42 +244,6 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             ((TextView)view.findViewById(R.id.artist_name)).setText(artist_name);
             ((TextView)view.findViewById(R.id.song_name)).setText(song_name);
             ((TextView)view.findViewById(R.id.score)).setText(score);
-
-
-            ImageButton toggleBtn = (ImageButton)view.findViewById(R.id.toggle_btn);
-
-            if(mListView.getSelectedItemPosition() == cursor.getPosition()){
-                toggleBtn.setImageResource(R.drawable.ic_stop);
-            } else {
-                toggleBtn.setImageResource(R.drawable.ic_play);
-            }
-
-            toggleBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
-                            .appendPath(MainActivity.PATH_STATION)
-                            .appendPath(Integer.toString(position))
-                            .build();
-
-                    ((MainActivity)context).onFragmentInteraction(stationUri);
-                }
-            });
         }
-    }
-
-    private String getLastSyncTimeStamp(){
-        Date syncDate = mApp.getLastSyncTimestamp();
-
-        String humanSyncDate;
-
-        if(syncDate == null){
-            humanSyncDate = getString(R.string.sync_status_never);
-        } else {
-            humanSyncDate = String.format(getString(R.string.sync_status_last_updated),
-                    ChronoUtils.getHumanFormattedDate(syncDate));
-        }
-
-        return humanSyncDate;
     }
 }

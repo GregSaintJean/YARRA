@@ -9,10 +9,14 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -88,7 +92,6 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
     private void commitResponses(LinkedList<BaseResponse> responses, ContentProviderClient provider)
             throws RemoteException{
 
-        //TODO I might have to handle a case where this can be null.
         for(BaseResponse response : responses){
 
             if(!response.isSuccessful()){
@@ -149,20 +152,51 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
 
     }
 
-    public static void setupPeriodicSync(Context ctx, long pollFrequency){
-        ContentResolver.addPeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), null, pollFrequency);
-    }
-
-    public static void removePeriodicSync(Context ctx){
-        ContentResolver.removePeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), null);
-    }
-
     public static void syncImmediately(Context ctx){
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         ContentResolver.requestSync(getSyncAccount(ctx),
                 ctx.getString(R.string.content_authority), bundle);
+    }
+
+    public static void configurePeriodicSync(Context ctx, int syncInterval, int flexTime){
+        Account account = getSyncAccount(ctx);
+        String authority = ctx.getString(R.string.content_authority);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            SyncRequest request = new SyncRequest.Builder()
+                    .syncPeriodic(syncInterval, flexTime)
+                    .setSyncAdapter(account, authority).build();
+            ContentResolver.requestSync(request);
+        } else {
+            ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
+        }
+    }
+
+    public static void removePeriodicSync(Context ctx){
+        ContentResolver.removePeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), new Bundle());
+    }
+
+    private static void onAccountCreated(Account newAccount, Context ctx){
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(ctx);
+        int syncInterval = Integer.valueOf(
+                sharedPref.getString(
+                        ctx.getString(R.string.pref_sync_interval),
+                        Integer.toString(ctx.getResources().getInteger(R.integer.default_sync_interval))));
+
+        configurePeriodicSync(
+                ctx,
+                syncInterval,
+                ctx.getResources().getInteger(R.integer.default_flextime_interval));
+
+        ContentResolver.setSyncAutomatically(
+                newAccount,
+                ctx.getString(R.string.content_authority),
+                true);
+
+        syncImmediately(ctx);
     }
 
     public static Account getSyncAccount(Context ctx){
@@ -180,8 +214,13 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
                 return null;
             }
 
+            onAccountCreated(newAccount, ctx);
         }
         return newAccount;
+    }
+
+    public static void initializeSyncAdapter(Context context){
+        getSyncAccount(context);
     }
 
 }

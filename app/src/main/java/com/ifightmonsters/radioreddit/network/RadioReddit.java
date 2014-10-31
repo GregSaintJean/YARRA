@@ -38,8 +38,8 @@ public final class RadioReddit {
             Uri.parse("http://cdn.audiopump.co/radioreddit/hiphop_mp3_128k"),
             Uri.parse("http://cdn.audiopump.co/radioreddit/rock_mp3_128k"),
             Uri.parse("http://cdn.audiopump.co/radioreddit/metal_mp3_128k"),
-            Uri.parse("http://cdn.audiopump.co/radioreddit/talk_mp3_128k"),
-            Uri.parse("http://cdn.audiopump.co/radioreddit/random_mp3_128k")
+            Uri.parse("http://cdn.audiopump.co/radioreddit/random_mp3_128k"),
+            Uri.parse("http://cdn.audiopump.co/radioreddit/talk_mp3_128k")
     };
 
     public static StatusResponse getMainStatus(){

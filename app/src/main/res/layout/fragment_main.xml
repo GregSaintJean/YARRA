@@ -1,62 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
+    android:background="@android:color/transparent"
     android:gravity="center"
     android:orientation="vertical"
-    android:animateLayoutChanges="true">
+    android:animateLayoutChanges="true"
+    tools:context="com.ifightmonsters.radioreddit.ui.fragment.MainFragment">
 
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
         android:divider="@android:color/transparent"
+        android:background="@android:color/transparent"
         android:dividerHeight="@dimen/station_list_dividers_height"
         android:choiceMode="singleChoice"/>
-
-    <ProgressBar
-        android:id="@+id/progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"/>
-
-    <RelativeLayout
-        android:id="@+id/error_container"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:background="@android:color/white"
-        android:visibility="gone">
-        <ImageView
-            android:id="@+id/error_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:src="@drawable/ic_signal_wifi_off"/>
-        <TextView
-            android:id="@+id/error_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_image"
-            android:textColor="@android:color/black"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:text="@string/error_message_connectivity"
-            android:textAlignment="center"/>
-        <TextView
-            android:id="@+id/nav_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_text"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:textColor="@color/clickable_text"
-            android:text="@string/solution_fix_connectivity"
-            android:textAlignment="center"/>
-    </RelativeLayout>
 </LinearLayout>

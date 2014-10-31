@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -17,20 +19,24 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.ifightmonsters.radioreddit.MainApp;
 import com.ifightmonsters.radioreddit.R;
-import com.ifightmonsters.radioreddit.network.RadioReddit;
+import com.ifightmonsters.radioreddit.constant.Station;
+import com.ifightmonsters.radioreddit.data.RadioRedditContract;
 import com.ifightmonsters.radioreddit.sync.RadioRedditSyncAdapter;
 import com.ifightmonsters.radioreddit.ui.activity.MainActivity;
 import com.ifightmonsters.radioreddit.utils.ChronoUtils;
 import com.ifightmonsters.radioreddit.utils.NetworkUtils;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Created by Gregory on 10/4/2014.
@@ -60,6 +66,7 @@ public class RadioService extends Service implements
     public static final String ACTION_STOP = ACTION + ".stop";
     public static final String BROADCAST_ERROR = BROADCAST + ".error";
     public static final String BROADCAST_STATUS = BROADCAST + ".status";
+    public static final String BROADCAST_KILLED = BROADCAST + ".killed";
 
     public static final String EXTRA_STATION = EXTRA + ".station";
     public static final String EXTRA_ERROR = EXTRA + ".error";
@@ -69,19 +76,29 @@ public class RadioService extends Service implements
     public static final String EXTRA_HEADSET_NAME = "name";
     public static final String EXTRA_HEADSET_MICROPHONE = "microphone";
 
+    private final String[] STATION_NAMES = {
+            "main",
+            "electronic",
+            "indie",
+            "hiphop",
+            "rock",
+            "metal",
+            "random",
+            "talk"
+    };
+
+    private final String[] STATUS_PROJECTION = {
+            RadioRedditContract.Status._ID,
+            RadioRedditContract.Status.COLUMN_RELAY
+    };
+
+    private final String STATUS_SELECTION
+            = RadioRedditContract.Status.COLUMN_PLAYLIST + " = ?";
+
     private static final int SYNC_REQUEST_CODE = 1;
 
     private static final float DUCK_VOLUME = 0.1f;
     private static final int NOTIFY_ID = 1;
-
-    public static final int STATION_MAIN = 0;
-    public static final int STATION_ELECTRONIC = 1;
-    public static final int STATION_INDIE = 2;
-    public static final int STATION_HIPHOP = 3;
-    public static final int STATION_ROCK = 4;
-    public static final int STATION_METAL = 5;
-    public static final int STATION_TALK = 6;
-    public static final int STATION_RANDOM = 7;
 
     private static final int STATE_IDLE = 0;
     private static final int STATE_PREPARING = 1;
@@ -89,7 +106,7 @@ public class RadioService extends Service implements
     private static final int STATE_STOPPED = 3;
     private static final int STATE_ERROR = 4;
     private static final int STATE_AUDIO_FOCUS_LOST = 5;
-    private static final int STATE_RETRIEVING = 6;
+    private static final int STATE_WAITING_FOR_SYNC_TO_FINISH = 6;
 
     private static final int FOCUS_FOCUSED = 0;
     private static final int FOCUS_NOT_FOCUSED_DUCK = 1;
@@ -124,15 +141,16 @@ public class RadioService extends Service implements
             if(action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)){
                 interruptPlayback();
             }
+
+            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
+                if(mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+                    attemptPlayback();
+                }
+            }
         }
     };
 
-    private final PendingIntent mPendingSyncIntent =
-            PendingIntent.getService(
-                    this,
-                    SYNC_REQUEST_CODE,
-                    new Intent(ACTION_SYNC),
-                    PendingIntent.FLAG_CANCEL_CURRENT);
+    private PendingIntent mPendingSyncIntent;
 
     private static RadioService sInstance;
     private MediaPlayer mPlayer;
@@ -153,6 +171,11 @@ public class RadioService extends Service implements
         mAlarmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
         registerReceivers();
+        mPendingSyncIntent = PendingIntent.getService(
+                this,
+                SYNC_REQUEST_CODE,
+                new Intent(ACTION_SYNC),
+                PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     @Override
@@ -163,12 +186,16 @@ public class RadioService extends Service implements
     }
 
     private void registerReceivers(){
-        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-        registerReceiver(mRadioServiceReceiver, filter);
+        IntentFilter internalFilter = new IntentFilter(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED);
+        mLocalBroadcastMgr.registerReceiver(mRadioServiceReceiver, internalFilter);
+        IntentFilter externalFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        externalFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        registerReceiver(mRadioServiceReceiver, externalFilter);
+
     }
 
     private void unregisterReceivers(){
+        mLocalBroadcastMgr.unregisterReceiver(mRadioServiceReceiver);
         unregisterReceiver(mRadioServiceReceiver);
     }
 
@@ -253,8 +280,10 @@ public class RadioService extends Service implements
         Log.d(LOG, "onPrepared called");
 
         if(mCurrentState == STATE_IDLE
-                || mCurrentState == STATE_ERROR){
+                || mCurrentState == STATE_ERROR
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
             Log.d(LOG, "RadioService not in correct state. returning....");
+            mCurrentState = STATE_ERROR;
             return;
         }
 
@@ -276,7 +305,7 @@ public class RadioService extends Service implements
     }
 
     //TODO Replace with preference or stored last value
-    private int mCurrentStation = STATION_MAIN;
+    private int mCurrentStation = Station.MAIN;
 
     private void interruptPlayback(){
         if(mCurrentState == STATE_PLAYING){
@@ -360,9 +389,11 @@ public class RadioService extends Service implements
         mCurrentState = STATE_IDLE;
     }
 
-    private void playStream(){
-        Log.d(LOG, "playStream called");
-        if(mCurrentState == STATE_PREPARING || mCurrentState == STATE_PLAYING){
+    private void prepStreamPlayback(){
+        Log.d(LOG, "prepStreamPlayback called");
+        if(mCurrentState == STATE_PREPARING
+                || mCurrentState == STATE_PLAYING
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
             return;
         }
 
@@ -374,31 +405,91 @@ public class RadioService extends Service implements
         mCurrentState = STATE_PREPARING;
         setupPreparingNotification();
 
+        retrievePlaybackData();
+
+    }
+
+    private void retrievePlaybackData(){
+        Log.d(LOG, "retrievePlaybackData called");
+
+        MainApp app = (MainApp)getApplicationContext();
+
+        Date lastSyncDate = app.getLastSyncTimestamp();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        long syncInterval = Integer.valueOf(
+                sharedPref.getString(
+                        getString(R.string.pref_sync_interval),
+                        Integer.toString(getResources().getInteger(R.integer.default_sync_interval))));
+
+        syncInterval = syncInterval * ChronoUtils.MILLISECONDS_PER_SECOND;
+
+        if(ChronoUtils.isDateOldEnough(this, lastSyncDate, syncInterval)){
+            Log.d(LOG, "Data is old enough to get rid of, syncing...");
+            mCurrentState = STATE_WAITING_FOR_SYNC_TO_FINISH;
+            RadioRedditSyncAdapter.syncImmediately(this);
+        } else {
+            Log.d(LOG, "Data is not old enough, attempting playback");
+            attemptPlayback();
+        }
+
+    }
+
+    private void attemptPlayback(){
+
+        Log.d(LOG, "attemptPlayback called");
+
+        mCurrentState = STATE_PREPARING;
+
         if(!mWifiLock.isHeld()){
             mWifiLock.acquire();
         }
 
         if(getAudioFocus()){
-            Uri station;
-            station = RadioReddit.BACKUP_STATIONS[mCurrentStation];
-            try{
-                mPlayer.setDataSource(this, station);
-            } catch(IOException e){
-                //TODO Maybe reset state variables
-                Log.e(LOG, e.toString());
+
+            Cursor c =
+                    getContentResolver().query(
+                            RadioRedditContract.Status.CONTENT_URI,
+                            STATUS_PROJECTION,
+                            STATUS_SELECTION,
+                            new String[] { STATION_NAMES[mCurrentStation-1] },
+                            null);
+
+            if(c.getCount() > 0 && c.moveToFirst()){
+
+                int relay_column_id = c.getColumnIndex(RadioRedditContract.Status.COLUMN_RELAY);
+
+                Uri station = Uri.parse(c.getString(relay_column_id));
+
+                try{
+                    mPlayer.setDataSource(this, station);
+                } catch(IOException e){
+                    Log.e(LOG, e.toString());
+                    mCurrentState = STATE_ERROR;
+                    releaseMediaPlayer(true);
+                    broadcastError(R.string.error_station_uri);
+                    stopSelf();
+                }
+
+                mPlayer.prepareAsync();
+
+            } else {
                 mCurrentState = STATE_ERROR;
+                Log.d(LOG, "No data from cursor came back");
+                broadcastError(R.string.error_no_station_data);
                 releaseMediaPlayer(true);
-                broadcastError(R.string.error_station_uri);
                 stopSelf();
             }
 
-            mPlayer.prepareAsync();
         } else {
             Log.e(LOG, "Unable to grab audio focus");
             stopSelf();
         }
 
     }
+
+
 
     private void broadcastError(int stringRes){
         Intent intent = new Intent(BROADCAST_ERROR);
@@ -429,6 +520,7 @@ public class RadioService extends Service implements
         mWifiLock.release();
         stopForeground(true);
         releaseMediaPlayer(true);
+        mLocalBroadcastMgr.sendBroadcast(new Intent(RadioService.BROADCAST_KILLED));
         stopSelf();
     }
 
@@ -477,6 +569,10 @@ public class RadioService extends Service implements
 
     private void handlePlayAction(Integer station){
 
+        if(mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+            return;
+        }
+
         if(mCurrentState == STATE_ERROR){
             releaseMediaPlayer(false);
         }
@@ -503,9 +599,7 @@ public class RadioService extends Service implements
         }
 
         mCurrentStation = station.intValue();
-
-        //TODO Here you might actually want to acquire the stream data to stream
-        playStream();
+        prepStreamPlayback();
     }
     private void handleStopAction(){
         Log.d(LOG, "handleStopAction called");
@@ -530,7 +624,8 @@ public class RadioService extends Service implements
 
         if(mCurrentState == STATE_ERROR
                 || mCurrentState == STATE_IDLE
-                || mCurrentState == STATE_STOPPED){
+                || mCurrentState == STATE_STOPPED
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
             return;
         }
 
