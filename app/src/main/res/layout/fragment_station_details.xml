@@ -10,9 +10,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
-    android:orientation="vertical"
     android:animateLayoutChanges="true"
-    tools:context="com.ifightmonsters.radioreddit.ui.fragment.StationDetailsFragment">
+    tools:context="com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment">
     <ImageView
         android:id="@+id/poster_container"
         android:layout_width="match_parent"

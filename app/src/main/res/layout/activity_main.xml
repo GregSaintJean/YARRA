@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#002654"
-    tools:context="com.ifightmonsters.radioreddit.ui.activity.MainActivity">
+    tools:context="com.ifightmonsters.yarra.ui.activity.MainActivity">
 
     <FrameLayout
         android:id="@+id/station_container"

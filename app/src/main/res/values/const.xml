@@ -10,8 +10,8 @@
     <integer name="default_flextime_interval">600</integer>
 
     <!-- Sync account information -->
-    <string name="sync_account_type" translatable="false">radioreddit.ifightmonsters.com</string>
-    <string name="content_authority" translatable="false">com.ifightmonsters.radioreddit</string>
+    <string name="sync_account_type" translatable="false">yarra.ifightmonsters.com</string>
+    <string name="content_authority" translatable="false">com.ifightmonsters.yarra</string>
     <string name="radio_reddit_account" translatable="false">Radio Reddit</string>
 
     <array name="station_banners">
