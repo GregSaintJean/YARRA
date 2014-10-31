@@ -7,14 +7,14 @@ import android.os.IBinder;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public class RadioRedditAuthenticatorService extends Service {
+public class YarraAuthenticatorService extends Service {
 
-    private RadioRedditAuthenticator mAuthenicator;
+    private YarraAuthenticator mAuthenicator;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mAuthenicator = new RadioRedditAuthenticator(this);
+        mAuthenicator = new YarraAuthenticator(this);
     }
 
     @Override

@@ -28,7 +28,7 @@ import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.constant.Station;
 import com.ifightmonsters.yarra.service.RadioService;
-import com.ifightmonsters.yarra.sync.RadioRedditSyncAdapter;
+import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.fragment.MainFragment;
 import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
@@ -37,7 +37,7 @@ import com.ifightmonsters.yarra.utils.NetworkUtils;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public class MainActivity extends ActionBarActivity implements View.OnClickListener{
+public class MainActivity extends ActionBarActivity implements View.OnClickListener {
 
     private static final String FRAGMENT_MAIN = "fragment_main";
     private static final String FRAGMENT_ELECTRONIC = "fragment_electronic";
@@ -70,23 +70,23 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private View mStationDetailsContainer;
     private ProgressBar mProgress;
 
-    private final BroadcastReceiver mMainActivityReceiver = new BroadcastReceiver(){
+    private final BroadcastReceiver mMainActivityReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(context == null || intent == null){
+            if (context == null || intent == null) {
                 return;
             }
 
             String action = intent.getAction();
 
-            if(action == null){
+            if (action == null) {
                 return;
             }
 
-            if(action.equals(RadioService.BROADCAST_ERROR)){
+            if (action.equals(RadioService.BROADCAST_ERROR)) {
                 Bundle extras = intent.getExtras();
 
-                if(extras == null || !extras.containsKey(RadioService.EXTRA_ERROR)){
+                if (extras == null || !extras.containsKey(RadioService.EXTRA_ERROR)) {
                     displayUnknownErrorToast();
                 }
 
@@ -96,10 +96,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                         error, Toast.LENGTH_SHORT).show();
             }
 
-            if(action.equals(RadioService.BROADCAST_STATUS)){
+            if (action.equals(RadioService.BROADCAST_STATUS)) {
                 Bundle extras = intent.getExtras();
 
-                if(extras == null || !extras.containsKey(RadioService.EXTRA_STATUS)){
+                if (extras == null || !extras.containsKey(RadioService.EXTRA_STATUS)) {
                     //TODO Change to set the default title
                     displayUnknownErrorToast();
                 }
@@ -108,32 +108,32 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 setActionBarTitle(message);
             }
 
-            if(action.equals(RadioService.BROADCAST_KILLED)){
+            if (action.equals(RadioService.BROADCAST_KILLED)) {
                 placePlaceHolderFragment();
             }
 
-            if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
+            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
                 checkNetworkConnectivity();
             }
 
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN)){
+            if (action.equals(YarraSyncAdapter.BROADCAST_SYNC_BEGIN)) {
                 showSyncing(true);
                 mSyncing = true;
             }
 
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
+            if (action.equals(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED)) {
                 showSyncing(false);
                 mSyncing = false;
             }
         }
     };
 
-    private void displayUnknownErrorToast(){
+    private void displayUnknownErrorToast() {
         Toast.makeText(
                 this, R.string.error_unknown, Toast.LENGTH_SHORT).show();
     }
 
-    private static final UriMatcher buildUriMatcher(){
+    private static final UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         matcher.addURI(ACTIVITY_AUTHORITY, PATH_STATION + "/#", STATION);
         return matcher;
@@ -142,37 +142,37 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        MainApp app = (MainApp)getApplicationContext();
-        if(app.isFirstRun()){
+        MainApp app = (MainApp) getApplicationContext();
+        if (app.isFirstRun()) {
             PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
-            RadioRedditSyncAdapter.initializeSyncAdapter(this);
+            YarraSyncAdapter.initializeSyncAdapter(this);
             app.setFirstRun();
         }
         setContentView(R.layout.activity_main);
 
         mMessageContainer = findViewById(R.id.message_container);
         mStationContainer = findViewById(R.id.station_container);
-        mErrorIV = (ImageView)findViewById(R.id.error_iv);
-        mErrorTV = (TextView)findViewById(R.id.error_tv);
-        mNavTV = (TextView)findViewById(R.id.nav_tv);
+        mErrorIV = (ImageView) findViewById(R.id.error_iv);
+        mErrorTV = (TextView) findViewById(R.id.error_tv);
+        mNavTV = (TextView) findViewById(R.id.nav_tv);
         mNavTV.setOnClickListener(this);
-        mProgress = (ProgressBar)findViewById(R.id.progress);
+        mProgress = (ProgressBar) findViewById(R.id.progress);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
 
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
 
             Fragment mainFragment = MainFragment.newInstance();
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.station_container, mainFragment).commit();
 
-            if(findViewById(R.id.station_details_container) != null){
+            if (findViewById(R.id.station_details_container) != null) {
 
                 mStationDetailsContainer = findViewById(R.id.station_details_container);
 
                 Fragment placeHolderFragment
                         = getSupportFragmentManager().findFragmentByTag(FRAGMENT_PLACEHOLDER);
 
-                if(placeHolderFragment == null){
+                if (placeHolderFragment == null) {
                     placeHolderFragment = PlaceHolderFragment.newInstance();
                 }
 
@@ -183,7 +183,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    private void setActionBarTitle(int stringRes){
+    private void setActionBarTitle(int stringRes) {
         ActionBar bar = getSupportActionBar();
         bar.setTitle(stringRes);
     }
@@ -202,23 +202,23 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_settings:
                 launchSettingsActivity();
                 return true;
             case R.id.action_refresh:
-                RadioRedditSyncAdapter.syncImmediately(this);
+                YarraSyncAdapter.syncImmediately(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void launchWifiSettingsActivity(){
+    public void launchWifiSettingsActivity() {
         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
     }
 
-    public void launchSettingsActivity(){
+    public void launchSettingsActivity() {
         startActivity(new Intent(this, SettingsActivity.class));
     }
 
@@ -237,23 +237,23 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.nav_tv){
+        if (v.getId() == R.id.nav_tv) {
             launchWifiSettingsActivity();
         }
     }
 
-    private void registerReceivers(){
+    private void registerReceivers() {
         IntentFilter internalFilter = new IntentFilter(RadioService.BROADCAST_ERROR);
         internalFilter.addAction(RadioService.BROADCAST_STATUS);
         internalFilter.addAction(RadioService.BROADCAST_KILLED);
-        internalFilter.addAction(RadioRedditSyncAdapter.BROADCAST_SYNC_BEGIN);
-        internalFilter.addAction(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED);
+        internalFilter.addAction(YarraSyncAdapter.BROADCAST_SYNC_BEGIN);
+        internalFilter.addAction(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED);
         IntentFilter externalFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         mLocalBroadcastMgr.registerReceiver(mMainActivityReceiver, internalFilter);
         registerReceiver(mMainActivityReceiver, externalFilter);
     }
 
-    private void unregisterReceivers(){
+    private void unregisterReceivers() {
         mLocalBroadcastMgr.unregisterReceiver(mMainActivityReceiver);
         unregisterReceiver(mMainActivityReceiver);
     }
@@ -262,7 +262,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         final int match = sUriMatcher.match(uri);
 
-        switch(match){
+        switch (match) {
             case STATION:
                 handleStation(ContentUris.parseId(uri));
                 break;
@@ -272,27 +272,27 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     }
 
-    private void handleStation(long id){
+    private void handleStation(long id) {
 
-        if(mCurrentStation == id && RadioService.isPlaying()){
+        if (mCurrentStation == id && RadioService.isPlaying()) {
             RadioService.stop(this);
             return;
         }
 
-        RadioService.play(this, (int)id);
+        RadioService.play(this, (int) id);
         mCurrentStation = id;
 
         placeCorrectFragment();
     }
 
-    private void placeCorrectFragment(){
+    private void placeCorrectFragment() {
 
-        if(findViewById(R.id.station_details_container) != null){
+        if (findViewById(R.id.station_details_container) != null) {
 
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             Fragment nextFragment;
 
-            switch((int)mCurrentStation){
+            switch ((int) mCurrentStation) {
                 case Station.MAIN:
                 default:
                     nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_MAIN);
@@ -320,11 +320,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                     break;
             }
 
-            if(nextFragment == null){
+            if (nextFragment == null) {
                 nextFragment = StationDetailsFragment.newInstance();
             }
 
-            switch((int)mCurrentStation){
+            switch ((int) mCurrentStation) {
                 case Station.MAIN:
                 default:
                     trans.replace(R.id.station_details_container, nextFragment,
@@ -366,11 +366,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     }
 
-    private void placePlaceHolderFragment(){
-        if(findViewById(R.id.station_details_container) != null){
+    private void placePlaceHolderFragment() {
+        if (findViewById(R.id.station_details_container) != null) {
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             Fragment nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_PLACEHOLDER);
-            if(nextFragment == null){
+            if (nextFragment == null) {
                 nextFragment = PlaceHolderFragment.newInstance();
             }
             trans.replace(R.id.station_details_container, nextFragment, FRAGMENT_PLACEHOLDER);
@@ -378,11 +378,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    private void checkNetworkConnectivity(){
-        if(NetworkUtils.hasNetworkConnectivity(this)){
+    private void checkNetworkConnectivity() {
+        if (NetworkUtils.hasNetworkConnectivity(this)) {
             mStationContainer.setVisibility(View.VISIBLE);
 
-            if(findViewById(R.id.station_details_container) != null){
+            if (findViewById(R.id.station_details_container) != null) {
                 mStationDetailsContainer.setVisibility(View.VISIBLE);
             }
 
@@ -395,7 +395,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
             mStationContainer.setVisibility(View.GONE);
 
-            if(findViewById(R.id.station_details_container) != null){
+            if (findViewById(R.id.station_details_container) != null) {
                 mStationDetailsContainer.setVisibility(View.GONE);
             }
 
@@ -410,14 +410,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         invalidateOptionsMenu();
     }
 
-    private void showSyncing(boolean show){
+    private void showSyncing(boolean show) {
 
-        if(show){
+        if (show) {
             mProgress.setVisibility(View.VISIBLE);
             mStationContainer.setVisibility(View.GONE);
             mMessageContainer.setVisibility(View.VISIBLE);
 
-            if(findViewById(R.id.station_details_container) != null){
+            if (findViewById(R.id.station_details_container) != null) {
                 mStationDetailsContainer.setVisibility(View.GONE);
             }
 
@@ -426,7 +426,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             mStationContainer.setVisibility(View.VISIBLE);
             mMessageContainer.setVisibility(View.GONE);
 
-            if(findViewById(R.id.station_details_container) != null){
+            if (findViewById(R.id.station_details_container) != null) {
                 mStationDetailsContainer.setVisibility(View.VISIBLE);
             }
         }

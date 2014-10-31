@@ -5,13 +5,13 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 
 import com.ifightmonsters.yarra.R;
-import com.ifightmonsters.yarra.sync.RadioRedditSyncAdapter;
+import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 
 /**
  * Created by Gregory on 10/31/2014.
  */
 public class SettingsActivity extends PreferenceActivity
-        implements SharedPreferences.OnSharedPreferenceChangeListener{
+        implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,16 +34,16 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-        if(key.equals(getString(R.string.pref_sync_interval))){
+        if (key.equals(getString(R.string.pref_sync_interval))) {
 
-            RadioRedditSyncAdapter.removePeriodicSync(this);
+            YarraSyncAdapter.removePeriodicSync(this);
 
             int sync_interval = Integer.valueOf(sharedPreferences.getString(getString(R.string.pref_sync_interval),
                     Integer.toString(getResources().getInteger(R.integer.default_sync_interval))));
 
             int flex_time = getResources().getInteger(R.integer.default_flextime_interval);
 
-            RadioRedditSyncAdapter.configurePeriodicSync(this, sync_interval, flex_time);
+            YarraSyncAdapter.configurePeriodicSync(this, sync_interval, flex_time);
 
         }
 

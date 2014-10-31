@@ -12,7 +12,7 @@ import android.net.Uri;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public class RadioRedditProvider extends ContentProvider {
+public class YarraProvider extends ContentProvider {
 
     private static final String LOG = "RadioRedditProvider";
 
@@ -22,24 +22,24 @@ public class RadioRedditProvider extends ContentProvider {
     private static final int SONG_ID = 4;
 
     private static final UriMatcher sUriMatcher = buildUriMatcher();
-    private RadioRedditDbHelper mOpenHelper;
+    private YarraDbHelper mOpenHelper;
 
-    private static UriMatcher buildUriMatcher(){
+    private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        final String authority = RadioRedditContract.CONTENT_AUTHORITY;
+        final String authority = YarraContract.CONTENT_AUTHORITY;
 
-        matcher.addURI(authority, RadioRedditContract.PATH_STATUS, STATUS);
-        matcher.addURI(authority, RadioRedditContract.PATH_STATUS + "/#", STATUS_ID);
+        matcher.addURI(authority, YarraContract.PATH_STATUS, STATUS);
+        matcher.addURI(authority, YarraContract.PATH_STATUS + "/#", STATUS_ID);
 
-        matcher.addURI(authority, RadioRedditContract.PATH_SONG, SONG);
-        matcher.addURI(authority, RadioRedditContract.PATH_SONG + "/#", SONG_ID);
+        matcher.addURI(authority, YarraContract.PATH_SONG, SONG);
+        matcher.addURI(authority, YarraContract.PATH_SONG + "/#", SONG_ID);
 
         return matcher;
     }
 
     @Override
     public boolean onCreate() {
-        mOpenHelper = new RadioRedditDbHelper(getContext());
+        mOpenHelper = new YarraDbHelper(getContext());
         return true;
     }
 
@@ -48,10 +48,10 @@ public class RadioRedditProvider extends ContentProvider {
 
         Cursor cursor;
 
-        switch (sUriMatcher.match(uri)){
+        switch (sUriMatcher.match(uri)) {
             case STATUS:
                 cursor = mOpenHelper.getReadableDatabase().query(
-                        RadioRedditContract.Status.TABLE_NAME,
+                        YarraContract.Status.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -62,9 +62,9 @@ public class RadioRedditProvider extends ContentProvider {
                 break;
             case STATUS_ID:
                 cursor = mOpenHelper.getReadableDatabase().query(
-                        RadioRedditContract.Status.TABLE_NAME,
+                        YarraContract.Status.TABLE_NAME,
                         projection,
-                        RadioRedditContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
+                        YarraContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
                         null,
                         null,
                         null,
@@ -73,7 +73,7 @@ public class RadioRedditProvider extends ContentProvider {
                 break;
             case SONG:
                 cursor = mOpenHelper.getReadableDatabase().query(
-                        RadioRedditContract.Song.TABLE_NAME,
+                        YarraContract.Song.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -84,9 +84,9 @@ public class RadioRedditProvider extends ContentProvider {
                 break;
             case SONG_ID:
                 cursor = mOpenHelper.getReadableDatabase().query(
-                        RadioRedditContract.Song.TABLE_NAME,
+                        YarraContract.Song.TABLE_NAME,
                         projection,
-                        RadioRedditContract.Song._ID + " = '" + ContentUris.parseId(uri) + "'",
+                        YarraContract.Song._ID + " = '" + ContentUris.parseId(uri) + "'",
                         null,
                         null,
                         null,
@@ -106,16 +106,16 @@ public class RadioRedditProvider extends ContentProvider {
 
         final int match = sUriMatcher.match(uri);
 
-        switch(match){
+        switch (match) {
 
             case STATUS:
-                return RadioRedditContract.Status.CONTENT_TYPE;
+                return YarraContract.Status.CONTENT_TYPE;
             case STATUS_ID:
-                return RadioRedditContract.Status.CONTENT_ITEM_TYPE;
+                return YarraContract.Status.CONTENT_ITEM_TYPE;
             case SONG:
-                return RadioRedditContract.Song.CONTENT_TYPE;
+                return YarraContract.Song.CONTENT_TYPE;
             case SONG_ID:
-                return RadioRedditContract.Song.CONTENT_ITEM_TYPE;
+                return YarraContract.Song.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -128,20 +128,20 @@ public class RadioRedditProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         Uri returnUri;
 
-        switch(match){
-            case STATUS:{
-                long _id = db.insert(RadioRedditContract.Status.TABLE_NAME, null, values);
-                if(_id > 0){
-                    returnUri = RadioRedditContract.Status.buildStatusUri(_id);
+        switch (match) {
+            case STATUS: {
+                long _id = db.insert(YarraContract.Status.TABLE_NAME, null, values);
+                if (_id > 0) {
+                    returnUri = YarraContract.Status.buildStatusUri(_id);
                 } else {
                     throw new SQLException("Failed to insert row into " + uri);
                 }
             }
             break;
-            case SONG:{
-                long _id = db.insert(RadioRedditContract.Song.TABLE_NAME, null, values);
-                if(_id > 0){
-                    returnUri = RadioRedditContract.Song.buildSongUri(_id);
+            case SONG: {
+                long _id = db.insert(YarraContract.Song.TABLE_NAME, null, values);
+                if (_id > 0) {
+                    returnUri = YarraContract.Song.buildSongUri(_id);
                 } else {
                     throw new SQLException("Failed to insert row into " + uri);
                 }
@@ -159,23 +159,23 @@ public class RadioRedditProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
-        switch(match){
+        switch (match) {
 
             case STATUS:
                 rowsDeleted = db.delete(
-                        RadioRedditContract.Status.TABLE_NAME, selection, selectionArgs
+                        YarraContract.Status.TABLE_NAME, selection, selectionArgs
                 );
                 break;
             case SONG:
                 rowsDeleted = db.delete(
-                        RadioRedditContract.Song.TABLE_NAME, selection, selectionArgs
+                        YarraContract.Song.TABLE_NAME, selection, selectionArgs
                 );
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
 
-        if(selection == null || rowsDeleted != 0){
+        if (selection == null || rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
@@ -187,23 +187,23 @@ public class RadioRedditProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsUpdated;
-        switch(match){
+        switch (match) {
 
             case STATUS:
                 rowsUpdated = db.update(
-                        RadioRedditContract.Status.TABLE_NAME, values, selection, selectionArgs
+                        YarraContract.Status.TABLE_NAME, values, selection, selectionArgs
                 );
                 break;
             case SONG:
                 rowsUpdated = db.update(
-                        RadioRedditContract.Song.TABLE_NAME, values, selection, selectionArgs
+                        YarraContract.Song.TABLE_NAME, values, selection, selectionArgs
                 );
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
 
-        if(rowsUpdated != 0){
+        if (rowsUpdated != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
         return rowsUpdated;
@@ -216,19 +216,19 @@ public class RadioRedditProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
 
-        switch(match){
+        switch (match) {
             case SONG:
                 db.beginTransaction();
                 int returnCount = 0;
-                try{
-                    for(ContentValues value:  values){
-                        long _id = db.insert(RadioRedditContract.Song.TABLE_NAME, null, value);
-                        if(_id != -1){
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(YarraContract.Song.TABLE_NAME, null, value);
+                        if (_id != -1) {
                             returnCount++;
                         }
                     }
                     db.setTransactionSuccessful();
-                } finally{
+                } finally {
                     db.endTransaction();
                 }
                 getContext().getContentResolver().notifyChange(uri, null);

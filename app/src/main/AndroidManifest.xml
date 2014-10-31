@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ui.activity.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,17 +26,17 @@
         </activity>
         <activity
             android:name=".ui.activity.SettingsActivity"
-            android:label="@string/title_activity_settings"/>
+            android:label="@string/title_activity_settings" />
 
         <service android:name=".service.RadioService" />
 
         <provider
-            android:name=".data.RadioRedditProvider"
+            android:name=".data.YarraProvider"
             android:authorities="@string/content_authority"
             android:exported="false"
             android:syncable="true" />
 
-        <service android:name=".sync.RadioRedditAuthenticatorService" >
+        <service android:name=".sync.YarraAuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -48,8 +48,8 @@
 
         <!-- Sync Adapter Service -->
         <service
-            android:name=".sync.RadioRedditSyncService"
-            android:exported="true" >
+            android:name=".sync.YarraSyncService"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>

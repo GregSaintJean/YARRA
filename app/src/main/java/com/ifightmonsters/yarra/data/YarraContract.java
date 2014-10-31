@@ -7,7 +7,7 @@ import android.provider.BaseColumns;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public final class RadioRedditContract {
+public final class YarraContract {
 
     public static final String CONTENT_AUTHORITY = "com.ifightmonsters.yarra";
 
@@ -39,13 +39,13 @@ public final class RadioRedditContract {
 
         public static final String COLUMN_PLAYLIST = "playlist";
 
-        public static Uri buildStatusUri(long id){
+        public static Uri buildStatusUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
     }
 
-    public static final class Song implements BaseColumns{
+    public static final class Song implements BaseColumns {
 
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_SONG).build();
@@ -80,9 +80,9 @@ public final class RadioRedditContract {
 
         public static final String COLUMN_PREVIEW_URL = "preview_url";
 
-        public static final String COLUMN_DOWNLOAD_URL= "download_url";
+        public static final String COLUMN_DOWNLOAD_URL = "download_url";
 
-        public static Uri buildSongUri(long id){
+        public static Uri buildSongUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 

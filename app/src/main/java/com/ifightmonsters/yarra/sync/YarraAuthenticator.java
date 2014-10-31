@@ -10,9 +10,9 @@ import android.os.Bundle;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public class RadioRedditAuthenticator extends AbstractAccountAuthenticator {
+public class YarraAuthenticator extends AbstractAccountAuthenticator {
 
-    public RadioRedditAuthenticator(Context context){
+    public YarraAuthenticator(Context context) {
         super(context);
     }
 

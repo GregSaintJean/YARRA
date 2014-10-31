@@ -22,7 +22,7 @@ import android.util.Log;
 
 import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
-import com.ifightmonsters.yarra.data.RadioRedditContract;
+import com.ifightmonsters.yarra.data.YarraContract;
 import com.ifightmonsters.yarra.entities.Song;
 import com.ifightmonsters.yarra.entities.Status;
 import com.ifightmonsters.yarra.network.BaseResponse;
@@ -36,7 +36,7 @@ import java.util.LinkedList;
 /**
  * Created by Gregory on 10/31/2014.
  */
-public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
+public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String LOG = "RadioRedditSyncAdapter";
 
@@ -47,7 +47,7 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
             = "com.ifightmonsters.yarra.sync.RadioRedditSyncAdapter.broadcast.sync_completed";
     private LocalBroadcastManager mBroadMgr;
 
-    public RadioRedditSyncAdapter(Context context, boolean autoInitialize){
+    public YarraSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         mBroadMgr = LocalBroadcastManager.getInstance(context);
     }
@@ -72,54 +72,54 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         responses.add(RadioReddit.getRandomStatus());
         responses.add(RadioReddit.getTalkStatus());
 
-        try{
+        try {
             purgeDatabases(provider);
             commitResponses(responses, provider);
-            MainApp app = (MainApp)getContext().getApplicationContext();
+            MainApp app = (MainApp) getContext().getApplicationContext();
             app.setSyncTimestamp();
-        } catch(RemoteException e){
+        } catch (RemoteException e) {
             Log.e(LOG, e.toString());
         }
 
         mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_COMPLETED));
     }
 
-    private void purgeDatabases(ContentProviderClient provider) throws RemoteException{
-        provider.delete(RadioRedditContract.Song.CONTENT_URI, null, null);
-        provider.delete(RadioRedditContract.Status.CONTENT_URI, null, null);
+    private void purgeDatabases(ContentProviderClient provider) throws RemoteException {
+        provider.delete(YarraContract.Song.CONTENT_URI, null, null);
+        provider.delete(YarraContract.Status.CONTENT_URI, null, null);
     }
 
     private void commitResponses(LinkedList<BaseResponse> responses, ContentProviderClient provider)
-            throws RemoteException{
+            throws RemoteException {
 
-        for(BaseResponse response : responses){
+        for (BaseResponse response : responses) {
 
-            if(!response.isSuccessful()){
+            if (!response.isSuccessful()) {
                 continue;
             }
 
             Status status;
 
-            if(response instanceof TalkResponse){
-                status = ((TalkResponse)response).getStatus();
-            } else{
-                status = ((StatusResponse)response).getStatus();
+            if (response instanceof TalkResponse) {
+                status = ((TalkResponse) response).getStatus();
+            } else {
+                status = ((StatusResponse) response).getStatus();
             }
 
             ContentValues statusValues = new ContentValues();
-            statusValues.put(RadioRedditContract.Status.COLUMN_ONLINE, status.getOnline());
-            statusValues.put(RadioRedditContract.Status.COLUMN_RELAY, status.getRelay());
-            statusValues.put(RadioRedditContract.Status.COLUMN_LISTENERS, status.getListeners());
-            statusValues.put(RadioRedditContract.Status.COLUMN_ALL_LISTENERS, status.getAll_listeners());
-            statusValues.put(RadioRedditContract.Status.COLUMN_PLAYLIST, status.getPlaylist());
+            statusValues.put(YarraContract.Status.COLUMN_ONLINE, status.getOnline());
+            statusValues.put(YarraContract.Status.COLUMN_RELAY, status.getRelay());
+            statusValues.put(YarraContract.Status.COLUMN_LISTENERS, status.getListeners());
+            statusValues.put(YarraContract.Status.COLUMN_ALL_LISTENERS, status.getAll_listeners());
+            statusValues.put(YarraContract.Status.COLUMN_PLAYLIST, status.getPlaylist());
 
-            Uri insertUri = provider.insert(RadioRedditContract.Status.CONTENT_URI, statusValues);
+            Uri insertUri = provider.insert(YarraContract.Status.CONTENT_URI, statusValues);
 
-            if(response instanceof StatusResponse){
+            if (response instanceof StatusResponse) {
 
                 long statusId = ContentUris.parseId(insertUri);
 
-                LinkedList<Song> songs = (LinkedList<Song>)status.getSongs();
+                LinkedList<Song> songs = (LinkedList<Song>) status.getSongs();
 
                 int size = songs.size();
 
@@ -129,30 +129,30 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 Iterator<Song> iter = songs.iterator();
 
-                while(iter.hasNext()){
+                while (iter.hasNext()) {
                     ContentValues songValue = new ContentValues();
                     Song song = iter.next();
-                    songValue.put(RadioRedditContract.Song.COLUMN_STATUS_ID, statusId);
-                    songValue.put(RadioRedditContract.Song.COLUMN_ALBUM, song.getAlbum());
-                    songValue.put(RadioRedditContract.Song.COLUMN_ARTIST, song.getArtist());
-                    songValue.put(RadioRedditContract.Song.COLUMN_DOWNLOAD_URL, song.getDownload_url());
-                    songValue.put(RadioRedditContract.Song.COLUMN_GENRE, song.getGenre());
-                    songValue.put(RadioRedditContract.Song.COLUMN_PREVIEW_URL, song.getPreview_url());
-                    songValue.put(RadioRedditContract.Song.COLUMN_REDDIT_TITLE, song.getReddit_title());
-                    songValue.put(RadioRedditContract.Song.COLUMN_REDDITOR, song.getRedditor());
-                    songValue.put(RadioRedditContract.Song.COLUMN_SCORE, song.getScore());
-                    songValue.put(RadioRedditContract.Song.COLUMN_TITLE, song.getTitle());
+                    songValue.put(YarraContract.Song.COLUMN_STATUS_ID, statusId);
+                    songValue.put(YarraContract.Song.COLUMN_ALBUM, song.getAlbum());
+                    songValue.put(YarraContract.Song.COLUMN_ARTIST, song.getArtist());
+                    songValue.put(YarraContract.Song.COLUMN_DOWNLOAD_URL, song.getDownload_url());
+                    songValue.put(YarraContract.Song.COLUMN_GENRE, song.getGenre());
+                    songValue.put(YarraContract.Song.COLUMN_PREVIEW_URL, song.getPreview_url());
+                    songValue.put(YarraContract.Song.COLUMN_REDDIT_TITLE, song.getReddit_title());
+                    songValue.put(YarraContract.Song.COLUMN_REDDITOR, song.getRedditor());
+                    songValue.put(YarraContract.Song.COLUMN_SCORE, song.getScore());
+                    songValue.put(YarraContract.Song.COLUMN_TITLE, song.getTitle());
                     values[count++] = songValue;
                 }
 
-                provider.bulkInsert(RadioRedditContract.Song.CONTENT_URI, values);
+                provider.bulkInsert(YarraContract.Song.CONTENT_URI, values);
             }
 
         }
 
     }
 
-    public static void syncImmediately(Context ctx){
+    public static void syncImmediately(Context ctx) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
@@ -160,11 +160,11 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
                 ctx.getString(R.string.content_authority), bundle);
     }
 
-    public static void configurePeriodicSync(Context ctx, int syncInterval, int flexTime){
+    public static void configurePeriodicSync(Context ctx, int syncInterval, int flexTime) {
         Account account = getSyncAccount(ctx);
         String authority = ctx.getString(R.string.content_authority);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             SyncRequest request = new SyncRequest.Builder()
                     .syncPeriodic(syncInterval, flexTime)
                     .setSyncAdapter(account, authority).build();
@@ -174,11 +174,11 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    public static void removePeriodicSync(Context ctx){
+    public static void removePeriodicSync(Context ctx) {
         ContentResolver.removePeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), new Bundle());
     }
 
-    private static void onAccountCreated(Account newAccount, Context ctx){
+    private static void onAccountCreated(Account newAccount, Context ctx) {
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(ctx);
         int syncInterval = Integer.valueOf(
@@ -199,18 +199,18 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         syncImmediately(ctx);
     }
 
-    public static Account getSyncAccount(Context ctx){
+    public static Account getSyncAccount(Context ctx) {
         AccountManager accountManager =
-                (AccountManager)ctx.getSystemService(Context.ACCOUNT_SERVICE);
+                (AccountManager) ctx.getSystemService(Context.ACCOUNT_SERVICE);
 
         Account newAccount = new Account(
                 ctx.getString(R.string.radio_reddit_account), ctx.getString(R.string.sync_account_type)
         );
 
-        if( null == accountManager.getPassword(newAccount)){
+        if (null == accountManager.getPassword(newAccount)) {
 
 
-            if(!accountManager.addAccountExplicitly(newAccount, "", null)){
+            if (!accountManager.addAccountExplicitly(newAccount, "", null)) {
                 return null;
             }
 
@@ -219,7 +219,7 @@ public class RadioRedditSyncAdapter extends AbstractThreadedSyncAdapter {
         return newAccount;
     }
 
-    public static void initializeSyncAdapter(Context context){
+    public static void initializeSyncAdapter(Context context) {
         getSyncAccount(context);
     }
 

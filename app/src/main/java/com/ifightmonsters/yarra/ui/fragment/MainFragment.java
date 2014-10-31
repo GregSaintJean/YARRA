@@ -29,8 +29,8 @@ import android.widget.TextView;
 
 import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
-import com.ifightmonsters.yarra.data.RadioRedditContract;
-import com.ifightmonsters.yarra.data.RadioRedditDbHelper;
+import com.ifightmonsters.yarra.data.YarraContract;
+import com.ifightmonsters.yarra.data.YarraDbHelper;
 import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.ui.activity.MainActivity;
 
@@ -40,26 +40,26 @@ import com.ifightmonsters.yarra.ui.activity.MainActivity;
 public class MainFragment extends Fragment
         implements
         LoaderManager.LoaderCallbacks<Cursor>,
-        AdapterView.OnItemClickListener{
+        AdapterView.OnItemClickListener {
 
-    private String songSortOrder = RadioRedditContract.Song.COLUMN_STATUS_ID + " DESC";
+    private String songSortOrder = YarraContract.Song.COLUMN_STATUS_ID + " DESC";
 
     private int mCurrentSelection = -1;
 
     private static final String[] SONG_PROJECTION = {
-            RadioRedditContract.Song.TABLE_NAME + "." + RadioRedditContract.Song._ID,
-            RadioRedditContract.Song.COLUMN_REDDIT_ID,
-            RadioRedditContract.Song.COLUMN_STATUS_ID,
-            RadioRedditContract.Song.COLUMN_TITLE,
-            RadioRedditContract.Song.COLUMN_ARTIST,
-            RadioRedditContract.Song.COLUMN_ALBUM,
-            RadioRedditContract.Song.COLUMN_GENRE,
-            RadioRedditContract.Song.COLUMN_SCORE,
-            RadioRedditContract.Song.COLUMN_REDDIT_TITLE,
-            RadioRedditContract.Song.COLUMN_REDDIT_URL,
-            RadioRedditContract.Song.COLUMN_REDDITOR,
-            RadioRedditContract.Song.COLUMN_DOWNLOAD_URL,
-            RadioRedditContract.Song.COLUMN_PREVIEW_URL
+            YarraContract.Song.TABLE_NAME + "." + YarraContract.Song._ID,
+            YarraContract.Song.COLUMN_REDDIT_ID,
+            YarraContract.Song.COLUMN_STATUS_ID,
+            YarraContract.Song.COLUMN_TITLE,
+            YarraContract.Song.COLUMN_ARTIST,
+            YarraContract.Song.COLUMN_ALBUM,
+            YarraContract.Song.COLUMN_GENRE,
+            YarraContract.Song.COLUMN_SCORE,
+            YarraContract.Song.COLUMN_REDDIT_TITLE,
+            YarraContract.Song.COLUMN_REDDIT_URL,
+            YarraContract.Song.COLUMN_REDDITOR,
+            YarraContract.Song.COLUMN_DOWNLOAD_URL,
+            YarraContract.Song.COLUMN_PREVIEW_URL
     };
 
     private LocalBroadcastManager mLocalMgr;
@@ -68,20 +68,20 @@ public class MainFragment extends Fragment
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if(context == null || intent == null){
+            if (context == null || intent == null) {
                 return;
             }
 
             String action = intent.getAction();
 
-            if(action == null){
+            if (action == null) {
                 return;
             }
 
-            if(action.equals(RadioService.BROADCAST_KILLED)){
-                if(mListView != null){
+            if (action.equals(RadioService.BROADCAST_KILLED)) {
+                if (mListView != null) {
                     mListView.setItemChecked(mCurrentSelection, false);
-                } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                     mGridView.setItemChecked(mCurrentSelection, false);
                 }
             }
@@ -97,11 +97,12 @@ public class MainFragment extends Fragment
     private GridView mGridView;
     private CursorAdapter mAdapter;
 
-    public static MainFragment newInstance(){
+    public static MainFragment newInstance() {
         return new MainFragment();
     }
 
-    public MainFragment() {}
+    public MainFragment() {
+    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -112,14 +113,14 @@ public class MainFragment extends Fragment
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mActivity = (MainActivity)activity;
+        mActivity = (MainActivity) activity;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocalMgr = LocalBroadcastManager.getInstance(mActivity);
-        mApp = (MainApp)mActivity.getApplication();
+        mApp = (MainApp) mActivity.getApplication();
     }
 
     @Override
@@ -130,24 +131,24 @@ public class MainFragment extends Fragment
         mAdapter = new StationCursorAdapter(mActivity, null, false);
         View lister = v.findViewById(R.id.list);
 
-        if(lister == null){
-            mGridView = (GridView)v.findViewById(R.id.grid);
+        if (lister == null) {
+            mGridView = (GridView) v.findViewById(R.id.grid);
             mGridView.setAdapter(mAdapter);
             mGridView.setOnItemClickListener(this);
-        } else{
-            mListView = (ListView)v.findViewById(R.id.list);
+        } else {
+            mListView = (ListView) v.findViewById(R.id.list);
             mListView.setAdapter(mAdapter);
             mListView.setOnItemClickListener(this);
         }
         return v;
     }
 
-    private void registerReceivers(){
+    private void registerReceivers() {
         IntentFilter internalFilter = new IntentFilter(RadioService.BROADCAST_KILLED);
         mLocalMgr.registerReceiver(mMainFragmentReceiver, internalFilter);
     }
 
-    private void unregisterReceivers(){
+    private void unregisterReceivers() {
         mLocalMgr.unregisterReceiver(mMainFragmentReceiver);
     }
 
@@ -167,7 +168,7 @@ public class MainFragment extends Fragment
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return new CursorLoader(
                 getActivity(),
-                RadioRedditContract.Song.CONTENT_URI,
+                YarraContract.Song.CONTENT_URI,
                 SONG_PROJECTION,
                 null,
                 null,
@@ -208,7 +209,7 @@ public class MainFragment extends Fragment
         mCurrentSelection = position;
     }
 
-    public class StationCursorAdapter extends CursorAdapter{
+    public class StationCursorAdapter extends CursorAdapter {
 
         private TypedArray mStationArray;
         private String[] mStation;
@@ -229,24 +230,24 @@ public class MainFragment extends Fragment
 
             final int position = cursor.getPosition();
 
-            ((ImageView)view.findViewById(R.id.card_banner))
+            ((ImageView) view.findViewById(R.id.card_banner))
                     .setImageDrawable(mStationArray.getDrawable(position));
 
             ((TextView) view.findViewById(R.id.station_name)).setText(mStation[cursor.getPosition()]);
 
             String artist_name = String.format(context.getString(R.string.artist_name),
-                    cursor.getString(RadioRedditDbHelper.SONG_COLUMN_ARTIST));
+                    cursor.getString(YarraDbHelper.SONG_COLUMN_ARTIST));
             String song_name = String.format(context.getString(R.string.song_name),
-                    cursor.getString(RadioRedditDbHelper.SONG_COLUMN_TITLE));
-            String score = cursor.getString(RadioRedditDbHelper.SONG_COLUMN_SCORE);
+                    cursor.getString(YarraDbHelper.SONG_COLUMN_TITLE));
+            String score = cursor.getString(YarraDbHelper.SONG_COLUMN_SCORE);
             score = TextUtils.isEmpty(score) ? "0" : score;
 
             score = String.format(context.getString(R.string.score),
                     score);
 
-            ((TextView)view.findViewById(R.id.artist_name)).setText(artist_name);
-            ((TextView)view.findViewById(R.id.song_name)).setText(song_name);
-            ((TextView)view.findViewById(R.id.score)).setText(score);
+            ((TextView) view.findViewById(R.id.artist_name)).setText(artist_name);
+            ((TextView) view.findViewById(R.id.song_name)).setText(song_name);
+            ((TextView) view.findViewById(R.id.score)).setText(score);
         }
     }
 

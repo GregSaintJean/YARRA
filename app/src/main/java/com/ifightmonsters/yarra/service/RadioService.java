@@ -29,8 +29,8 @@ import android.util.Log;
 import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.constant.Station;
-import com.ifightmonsters.yarra.data.RadioRedditContract;
-import com.ifightmonsters.yarra.sync.RadioRedditSyncAdapter;
+import com.ifightmonsters.yarra.data.YarraContract;
+import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.activity.MainActivity;
 import com.ifightmonsters.yarra.utils.ChronoUtils;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
@@ -46,7 +46,7 @@ public class RadioService extends Service
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
-        AudioManager.OnAudioFocusChangeListener{
+        AudioManager.OnAudioFocusChangeListener {
 
     private static final String LOG = "RadioService";
     private static final String LOCK = "RadioServiceLock";
@@ -89,12 +89,12 @@ public class RadioService extends Service
     };
 
     private final String[] STATUS_PROJECTION = {
-            RadioRedditContract.Status._ID,
-            RadioRedditContract.Status.COLUMN_RELAY
+            YarraContract.Status._ID,
+            YarraContract.Status.COLUMN_RELAY
     };
 
     private final String STATUS_SELECTION
-            = RadioRedditContract.Status.COLUMN_PLAYLIST + " = ?";
+            = YarraContract.Status.COLUMN_PLAYLIST + " = ?";
 
     private static final int SYNC_REQUEST_CODE = 1;
 
@@ -119,32 +119,32 @@ public class RadioService extends Service
     private final BroadcastReceiver mRadioServiceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(context == null || intent == null){
+            if (context == null || intent == null) {
                 return;
             }
 
             String action = intent.getAction();
 
-            if(action == null){
+            if (action == null) {
                 return;
             }
 
-            if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
+            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
 
                 Bundle extras = intent.getExtras();
 
-                if(extras != null
-                        && extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)){
+                if (extras != null
+                        && extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
                     interruptPlayback();
                 }
             }
 
-            if(action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)){
+            if (action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
                 interruptPlayback();
             }
 
-            if(action.equals(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED)){
-                if(mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+            if (action.equals(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED)) {
+                if (mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
                     attemptPlayback();
                 }
             }
@@ -169,7 +169,7 @@ public class RadioService extends Service
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, LOCK);
         mNotificationMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        mAlarmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
+        mAlarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
         registerReceivers();
         mPendingSyncIntent = PendingIntent.getService(
@@ -186,8 +186,8 @@ public class RadioService extends Service
         sInstance = null;
     }
 
-    private void registerReceivers(){
-        IntentFilter internalFilter = new IntentFilter(RadioRedditSyncAdapter.BROADCAST_SYNC_COMPLETED);
+    private void registerReceivers() {
+        IntentFilter internalFilter = new IntentFilter(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED);
         mLocalBroadcastMgr.registerReceiver(mRadioServiceReceiver, internalFilter);
         IntentFilter externalFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         externalFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
@@ -195,7 +195,7 @@ public class RadioService extends Service
 
     }
 
-    private void unregisterReceivers(){
+    private void unregisterReceivers() {
         mLocalBroadcastMgr.unregisterReceiver(mRadioServiceReceiver);
         unregisterReceiver(mRadioServiceReceiver);
     }
@@ -206,27 +206,27 @@ public class RadioService extends Service
 
         Bundle extras = intent.getExtras();
 
-        if(TextUtils.isEmpty(action)){
+        if (TextUtils.isEmpty(action)) {
             Log.d(LOG, "Empty intent");
             handleEmptyIntent();
-            try{
+            try {
                 return Service.START_NOT_STICKY;
-            } finally{
+            } finally {
                 stopSelf();
             }
         }
 
-        if(action.equals(ACTION_PLAY)){
+        if (action.equals(ACTION_PLAY)) {
             Log.d(LOG, "Received play action");
-            if(extras != null && extras.containsKey(EXTRA_STATION)){
+            if (extras != null && extras.containsKey(EXTRA_STATION)) {
                 handlePlayAction(extras.getInt(EXTRA_STATION));
             } else {
                 handlePlayAction(null);
             }
-        } else if(action.equals(ACTION_STOP)){
+        } else if (action.equals(ACTION_STOP)) {
             Log.d(LOG, "Received stop action");
             handleStopAction();
-        } else if(action.equals(ACTION_SYNC)){
+        } else if (action.equals(ACTION_SYNC)) {
             Log.d(LOG, "Received sync action");
             handleSyncAction();
         }
@@ -244,7 +244,7 @@ public class RadioService extends Service
         mCurrentState = STATE_ERROR;
         Log.d(LOG, "onError called. what= " + String.valueOf(what) + " extra= " + String.valueOf(extra));
 
-        switch(what){
+        switch (what) {
             case MediaPlayer.MEDIA_ERROR_UNKNOWN:
                 Log.e(LOG, "Media Player error unknown");
                 break;
@@ -253,7 +253,7 @@ public class RadioService extends Service
                 break;
         }
 
-        switch(extra){
+        switch (extra) {
             case MediaPlayer.MEDIA_ERROR_IO:
                 Log.e(LOG, "Media Player IO Error");
                 Intent errorIntent = new Intent(BROADCAST_ERROR);
@@ -272,7 +272,7 @@ public class RadioService extends Service
         }
 
         releaseAudioFocus();
-        if(mWifiLock.isHeld()) mWifiLock.release();
+        if (mWifiLock.isHeld()) mWifiLock.release();
         return true;
     }
 
@@ -280,24 +280,24 @@ public class RadioService extends Service
     public void onPrepared(MediaPlayer mp) {
         Log.d(LOG, "onPrepared called");
 
-        if(mCurrentState == STATE_IDLE
+        if (mCurrentState == STATE_IDLE
                 || mCurrentState == STATE_ERROR
-                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
             Log.d(LOG, "RadioService not in correct state. returning....");
             mCurrentState = STATE_ERROR;
             return;
         }
 
-        if(mCurrentState == STATE_PLAYING){
+        if (mCurrentState == STATE_PLAYING) {
             stopPlayer();
             releaseMediaPlayer(false);
         }
 
-        if(mCurrentState == STATE_STOPPED){
+        if (mCurrentState == STATE_STOPPED) {
             releaseMediaPlayer(false);
         }
 
-        if(mCurrentState == STATE_PREPARING){
+        if (mCurrentState == STATE_PREPARING) {
             mCurrentState = STATE_PLAYING;
             mp.start();
             setupPlayingStatus();
@@ -308,8 +308,8 @@ public class RadioService extends Service
     //TODO Replace with preference or stored last value
     private int mCurrentStation = Station.MAIN;
 
-    private void interruptPlayback(){
-        if(mCurrentState == STATE_PLAYING){
+    private void interruptPlayback() {
+        if (mCurrentState == STATE_PLAYING) {
             killService();
             return;
         }
@@ -317,32 +317,32 @@ public class RadioService extends Service
         stopSelf();
     }
 
-    public static void play(Context ctx){
+    public static void play(Context ctx) {
         play(ctx, null);
     }
 
-    public static void play(Context ctx, Integer station){
+    public static void play(Context ctx, Integer station) {
         Intent intent = new Intent(ctx, RadioService.class);
         intent.setAction(ACTION_PLAY);
 
-        if(station != null){
+        if (station != null) {
             intent.putExtra(EXTRA_STATION, station);
         }
 
         ctx.startService(intent);
     }
 
-    public static void stop(Context ctx){
+    public static void stop(Context ctx) {
         Intent intent = new Intent(ctx, RadioService.class);
         intent.setAction(ACTION_STOP);
         ctx.startService(intent);
     }
 
-    public static boolean isPlaying(){
+    public static boolean isPlaying() {
         return sInstance != null && sInstance.mCurrentState == STATE_PLAYING;
     }
 
-    private void setupPlayingStatus(){
+    private void setupPlayingStatus() {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -351,7 +351,7 @@ public class RadioService extends Service
         mNotificationMgr.notify(NOTIFY_ID, builder.build());
     }
 
-    private void setupPreparingNotification(){
+    private void setupPreparingNotification() {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -373,10 +373,10 @@ public class RadioService extends Service
         startForeground(NOTIFY_ID, builder.build());
     }
 
-    private void setupMediaPlayer(){
+    private void setupMediaPlayer() {
         //TODO Maybe it's best to check what state everything is in
         Log.d(LOG, "setupMediaPlayer called");
-        if(mPlayer == null){
+        if (mPlayer == null) {
             mPlayer = new MediaPlayer();
             mPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
             mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -390,15 +390,15 @@ public class RadioService extends Service
         mCurrentState = STATE_IDLE;
     }
 
-    private void prepStreamPlayback(){
+    private void prepStreamPlayback() {
         Log.d(LOG, "prepStreamPlayback called");
-        if(mCurrentState == STATE_PREPARING
+        if (mCurrentState == STATE_PREPARING
                 || mCurrentState == STATE_PLAYING
-                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
             return;
         }
 
-        if(mCurrentState == STATE_STOPPED || mCurrentState == STATE_ERROR){
+        if (mCurrentState == STATE_STOPPED || mCurrentState == STATE_ERROR) {
             releaseMediaPlayer(false);
         }
 
@@ -410,10 +410,10 @@ public class RadioService extends Service
 
     }
 
-    private void retrievePlaybackData(){
+    private void retrievePlaybackData() {
         Log.d(LOG, "retrievePlaybackData called");
 
-        MainApp app = (MainApp)getApplicationContext();
+        MainApp app = (MainApp) getApplicationContext();
 
         Date lastSyncDate = app.getLastSyncTimestamp();
 
@@ -426,10 +426,10 @@ public class RadioService extends Service
 
         syncInterval = syncInterval * ChronoUtils.MILLISECONDS_PER_SECOND;
 
-        if(ChronoUtils.isDateOldEnough(this, lastSyncDate, syncInterval)){
+        if (ChronoUtils.isDateOldEnough(this, lastSyncDate, syncInterval)) {
             Log.d(LOG, "Data is old enough to get rid of, syncing...");
             mCurrentState = STATE_WAITING_FOR_SYNC_TO_FINISH;
-            RadioRedditSyncAdapter.syncImmediately(this);
+            YarraSyncAdapter.syncImmediately(this);
         } else {
             Log.d(LOG, "Data is not old enough, attempting playback");
             attemptPlayback();
@@ -437,37 +437,37 @@ public class RadioService extends Service
 
     }
 
-    private void attemptPlayback(){
+    private void attemptPlayback() {
 
         Log.d(LOG, "attemptPlayback called");
 
         mCurrentState = STATE_PREPARING;
 
-        if(!mWifiLock.isHeld()){
+        if (!mWifiLock.isHeld()) {
             mWifiLock.acquire();
         }
 
-        if(getAudioFocus()){
+        if (getAudioFocus()) {
 
             Cursor c =
                     getContentResolver().query(
-                            RadioRedditContract.Status.CONTENT_URI,
+                            YarraContract.Status.CONTENT_URI,
                             STATUS_PROJECTION,
                             STATUS_SELECTION,
-                            new String[] { STATION_NAMES[mCurrentStation] },
+                            new String[]{STATION_NAMES[mCurrentStation]},
                             null);
 
-            if(c.getCount() > 0 && c.moveToFirst()){
+            if (c.getCount() > 0 && c.moveToFirst()) {
 
-                int relay_column_id = c.getColumnIndex(RadioRedditContract.Status.COLUMN_RELAY);
+                int relay_column_id = c.getColumnIndex(YarraContract.Status.COLUMN_RELAY);
 
                 Uri station = Uri.parse(c.getString(relay_column_id));
 
                 c.close();
 
-                try{
+                try {
                     mPlayer.setDataSource(this, station);
-                } catch(IOException e){
+                } catch (IOException e) {
                     Log.e(LOG, e.toString());
                     mCurrentState = STATE_ERROR;
                     releaseMediaPlayer(true);
@@ -493,14 +493,13 @@ public class RadioService extends Service
     }
 
 
-
-    private void broadcastError(int stringRes){
+    private void broadcastError(int stringRes) {
         Intent intent = new Intent(BROADCAST_ERROR);
         intent.putExtra(EXTRA_ERROR, stringRes);
         mLocalBroadcastMgr.sendBroadcast(intent);
     }
 
-    private void stopPlayer(){
+    private void stopPlayer() {
         Log.d(LOG, "stopPlayer called");
         mCurrentState = STATE_STOPPED;
         mPlayer.stop();
@@ -509,11 +508,11 @@ public class RadioService extends Service
         //TODO Update notification
     }
 
-    private void killService(){
+    private void killService() {
         Log.d(LOG, "killService called");
-        if(mCurrentState == STATE_ERROR
+        if (mCurrentState == STATE_ERROR
                 || mCurrentState == STATE_STOPPED
-                || mCurrentState == STATE_IDLE){
+                || mCurrentState == STATE_IDLE) {
             return;
         }
 
@@ -527,7 +526,7 @@ public class RadioService extends Service
         stopSelf();
     }
 
-    private boolean getAudioFocus(){
+    private boolean getAudioFocus() {
 
         boolean focus = mAudioManager
                 .requestAudioFocus(
@@ -535,28 +534,28 @@ public class RadioService extends Service
                         AudioManager.STREAM_MUSIC,
                         AudioManager.AUDIOFOCUS_GAIN) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
-        if(focus){
+        if (focus) {
             mCurrentAudioFocus = FOCUS_FOCUSED;
         }
 
         return focus;
     }
 
-    private boolean releaseAudioFocus(){
+    private boolean releaseAudioFocus() {
         boolean not_focus = mAudioManager.abandonAudioFocus(this) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
-        if(not_focus){
+        if (not_focus) {
             mCurrentAudioFocus = FOCUS_NOT_FOCUSED;
         }
 
         return not_focus;
     }
 
-    private void releaseMediaPlayer(boolean type){
+    private void releaseMediaPlayer(boolean type) {
         Log.d(LOG, "releaseMediaPlayer called");
         //TODO implement the resetting of state variables maybe
         mPlayer.reset();
-        if(type){
+        if (type) {
             mPlayer.release();
             mPlayer = null;
         } else {
@@ -565,37 +564,37 @@ public class RadioService extends Service
 
     }
 
-    private void handleEmptyIntent(){
+    private void handleEmptyIntent() {
         Log.d(LOG, "handleEmptyAction called");
         broadcastError(R.string.error_empty_intent);
     }
 
-    private void handlePlayAction(Integer station){
+    private void handlePlayAction(Integer station) {
 
-        if(mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+        if (mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
             return;
         }
 
-        if(mCurrentState == STATE_ERROR){
+        if (mCurrentState == STATE_ERROR) {
             releaseMediaPlayer(false);
         }
 
-        if(mCurrentState == STATE_PLAYING || mCurrentState == STATE_PREPARING){
-            if(station == null || mCurrentStation == station.intValue()){
+        if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PREPARING) {
+            if (station == null || mCurrentStation == station.intValue()) {
                 return;
             }
 
-            if(mCurrentState == STATE_PLAYING){
+            if (mCurrentState == STATE_PLAYING) {
                 stopPlayer();
             }
 
-            if(mCurrentState == STATE_PREPARING){
+            if (mCurrentState == STATE_PREPARING) {
                 mCurrentState = STATE_STOPPED;
                 releaseMediaPlayer(false);
             }
         }
 
-        if(!NetworkUtils.hasNetworkConnectivity(this)){
+        if (!NetworkUtils.hasNetworkConnectivity(this)) {
             broadcastError(R.string.error_connectivity);
             killService();
             return;
@@ -604,17 +603,18 @@ public class RadioService extends Service
         mCurrentStation = station.intValue();
         prepStreamPlayback();
     }
-    private void handleStopAction(){
+
+    private void handleStopAction() {
         Log.d(LOG, "handleStopAction called");
-        if(mCurrentState == STATE_STOPPED || mCurrentState == STATE_IDLE){
+        if (mCurrentState == STATE_STOPPED || mCurrentState == STATE_IDLE) {
             return;
         }
 
         killService();
     }
 
-    private void handleSyncAction(){
-        RadioRedditSyncAdapter.syncImmediately(this);
+    private void handleSyncAction() {
+        YarraSyncAdapter.syncImmediately(this);
     }
 
     @Override
@@ -625,19 +625,19 @@ public class RadioService extends Service
     @Override
     public void onAudioFocusChange(int focusChange) {
 
-        if(mCurrentState == STATE_ERROR
+        if (mCurrentState == STATE_ERROR
                 || mCurrentState == STATE_IDLE
                 || mCurrentState == STATE_STOPPED
-                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH){
+                || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
             return;
         }
 
-        if(mCurrentState == STATE_PREPARING){
+        if (mCurrentState == STATE_PREPARING) {
             killService();
         }
 
-        if(mCurrentState == STATE_PLAYING){
-            switch(focusChange){
+        if (mCurrentState == STATE_PLAYING) {
+            switch (focusChange) {
                 case AudioManager.AUDIOFOCUS_GAIN:
                     mPlayer.setVolume(1.0f, 1.0f);
                     mCurrentAudioFocus = FOCUS_FOCUSED;
@@ -660,7 +660,7 @@ public class RadioService extends Service
     }
 
     //TODO use these methods
-    private void startSyncInterval(){
+    private void startSyncInterval() {
         mAlarmMgr.setInexactRepeating(
                 AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + RESYNC_INTERVAL,
@@ -670,7 +670,7 @@ public class RadioService extends Service
     }
 
     //TODO use these methods
-    private void stopSyncInterval(){
+    private void stopSyncInterval() {
         mAlarmMgr.cancel(mPendingSyncIntent);
     }
 
