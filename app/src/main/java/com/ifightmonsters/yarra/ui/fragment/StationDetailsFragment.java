@@ -111,7 +111,6 @@ public class StationDetailsFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_station_details, container, false);
-
         mPosterContainer = (ImageView) root.findViewById(R.id.poster_container);
         mStationName = (TextView) root.findViewById(R.id.station_name_tv);
         mListeners = (TextView) root.findViewById(R.id.listener_tv);
@@ -175,7 +174,6 @@ public class StationDetailsFragment extends Fragment
 
 
             } else if (cursorLoader.getId() == SONG_LOADER) {
-
 
             }
 

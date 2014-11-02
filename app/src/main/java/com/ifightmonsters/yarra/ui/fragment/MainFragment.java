@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -20,7 +19,6 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -31,15 +29,13 @@ import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
 import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.ui.activity.MainActivity;
-import com.ifightmonsters.yarra.ui.activity.StationDetailsActivity;
 
 /**
  * Created by Gregory on 10/31/2014.
  */
 public class MainFragment extends Fragment
         implements
-        LoaderManager.LoaderCallbacks<Cursor>,
-        AdapterView.OnItemClickListener {
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     private String statusSortOrder = YarraContract.Status._ID + " ASC";
 
@@ -121,11 +117,9 @@ public class MainFragment extends Fragment
         if (lister == null) {
             mGridView = (GridView) v.findViewById(R.id.grid);
             mGridView.setAdapter(mAdapter);
-            mGridView.setOnItemClickListener(this);
         } else {
             mListView = (ListView) v.findViewById(R.id.list);
             mListView.setAdapter(mAdapter);
-            mListView.setOnItemClickListener(this);
         }
         return v;
     }
@@ -185,17 +179,6 @@ public class MainFragment extends Fragment
         mActivity = null;
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
-                .appendPath(MainActivity.PATH_STATION)
-                .appendPath(Integer.toString(position))
-                .build();
-
-        mActivity.onFragmentInteraction(stationUri);
-        mCurrentSelection = position;
-    }
-
     public class StationCursorAdapter extends CursorAdapter {
 
         private TypedArray mStationArray;
@@ -238,31 +221,18 @@ public class MainFragment extends Fragment
             infoButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    startStationDetailsActivity(stationN, stationId);
+                    mActivity.handleFragments(stationN, stationId, position);
                 }
             });
 
             playButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
-                            .appendPath(MainActivity.PATH_STATION)
-                            .appendPath(Integer.toString(stationId))
-                            .build();
-
-                    mActivity.onFragmentInteraction(stationUri);
-                    mCurrentSelection = position;
+                    mActivity.handleStationPlayback(position);
                 }
             });
 
         }
-    }
-
-    private void startStationDetailsActivity(String station, int id) {
-        Intent intent = new Intent(getActivity(), StationDetailsActivity.class);
-        intent.putExtra(StationDetailsFragment.EXTRA_STATION_NAME, station);
-        intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
-        startActivity(intent);
     }
 
 }

@@ -45,6 +45,7 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static final String BROADCAST_SYNC_COMPLETED
             = "com.ifightmonsters.yarra.sync.RadioRedditSyncAdapter.broadcast.sync_completed";
+
     private LocalBroadcastManager mBroadMgr;
 
     public YarraSyncAdapter(Context context, boolean autoInitialize) {

@@ -6,9 +6,6 @@ import android.support.v7.app.ActionBarActivity;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public class StationDetailsActivity extends ActionBarActivity {
 
     @Override

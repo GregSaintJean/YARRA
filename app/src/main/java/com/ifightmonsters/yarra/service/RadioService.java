@@ -74,17 +74,6 @@ public class RadioService extends Service
     public static final String EXTRA_HEADSET_NAME = "name";
     public static final String EXTRA_HEADSET_MICROPHONE = "microphone";
 
-    private final String[] STATION_NAMES = {
-            "main",
-            "electronic",
-            "indie",
-            "hiphop",
-            "rock",
-            "metal",
-            "random",
-            "talk"
-    };
-
     private final String[] STATUS_PROJECTION = {
             YarraContract.Status._ID,
             YarraContract.Status.COLUMN_RELAY
@@ -451,7 +440,7 @@ public class RadioService extends Service
                             YarraContract.Status.CONTENT_URI,
                             STATUS_PROJECTION,
                             STATUS_SELECTION,
-                            new String[]{STATION_NAMES[mCurrentStation]},
+                            new String[]{Station.NAMES[mCurrentStation]},
                             null);
 
             if (c.getCount() > 0 && c.moveToFirst()) {

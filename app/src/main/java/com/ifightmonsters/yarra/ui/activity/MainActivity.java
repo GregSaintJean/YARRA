@@ -1,16 +1,13 @@
 package com.ifightmonsters.yarra.ui.activity;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.UriMatcher;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -19,7 +16,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Display;
 import android.view.Menu;
@@ -38,6 +34,7 @@ import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.fragment.MainFragment;
 import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
+import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
@@ -52,20 +49,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static final String FRAGMENT_TALK = "fragment_talk";
     private static final String FRAGMENT_PLACEHOLDER = "fragment_placeholder";
 
-    private static final String ACTIVITY_AUTHORITY = "com.ifightmonsters.radioreddit.ui.activity.MainActivity";
-    public static final Uri BASE_ACTIVITY_URI = Uri.parse("app://" + ACTIVITY_AUTHORITY);
-
-    public static final String PATH_STATION = "station";
-    public static final String PATH_STATUS = "status";
-
-    public static final int STATION = 1;
-    public static final int STATUS = 2;
     private long mCurrentStation = -1;
 
     private boolean mHasConnectivity = false;
     private boolean mSyncing = false;
-
-    private static UriMatcher sUriMatcher = buildUriMatcher();
 
     private LocalBroadcastManager mLocalBroadcastMgr;
     private ImageView mBackgroundIV, mErrorIV;
@@ -138,13 +125,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 this, R.string.error_unknown, Toast.LENGTH_SHORT).show();
     }
 
-    private static final UriMatcher buildUriMatcher() {
-        final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        matcher.addURI(ACTIVITY_AUTHORITY, PATH_STATION + "/#", STATION);
-        matcher.addURI(ACTIVITY_AUTHORITY, PATH_STATUS + "/#", STATUS);
-        return matcher;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -191,8 +171,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private void setActionBarTitle(int stringRes) {
-        ActionBar bar = getSupportActionBar();
-        bar.setTitle(stringRes);
+        getSupportActionBar().setTitle(stringRes);
     }
 
     @Override
@@ -266,54 +245,19 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         unregisterReceiver(mMainActivityReceiver);
     }
 
-    public void onFragmentInteraction(Uri uri) {
-
-        final int match = sUriMatcher.match(uri);
-
-        switch (match) {
-            case STATION:
-                handleStationPlayback(ContentUris.parseId(uri));
-                break;
-            case STATUS:
-                handleFragments(ContentUris.parseId(uri));
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown Uri: " + uri);
-        }
-
-    }
-
-    private void handleFragments(long id) {
-
-        if (findViewById(R.id.station_details_container) != null) {
-
-        } else {
-
-        }
-
-    }
-
-    private void handleStationPlayback(long id) {
-
-        if (mCurrentStation == id && RadioService.isPlaying()) {
-            RadioService.stop(this);
-            return;
-        }
-
-        RadioService.play(this, (int) id);
-        mCurrentStation = id;
-
-        placeCorrectFragment();
-    }
-
-    private void placeCorrectFragment() {
+    /*
+        I wrote the parameters for this method and thought "this just got stupid".
+        There is probably a way to simplify this but I can't think of it right now.
+        I don't like this at all.
+     */
+    public void handleFragments(String station_name, int databaseId, int stationid) {
 
         if (findViewById(R.id.station_details_container) != null) {
 
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             Fragment nextFragment;
 
-            switch ((int) mCurrentStation) {
+            switch (stationid) {
                 case Station.MAIN:
                 default:
                     nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_MAIN);
@@ -342,11 +286,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             }
 
             if (nextFragment == null) {
-                //TODO Rewrite fragment handling
-                //nextFragment = StationDetailsFragment.newInstance();
+                nextFragment = StationDetailsFragment.newInstance(station_name, databaseId);
             }
 
-            switch ((int) mCurrentStation) {
+            switch (stationid) {
                 case Station.MAIN:
                 default:
                     trans.replace(R.id.station_details_container, nextFragment,
@@ -381,10 +324,22 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                             FRAGMENT_TALK);
                     break;
             }
-
             trans.commit();
-
+        } else {
+            startStationDetailsActivity(station_name, databaseId);
         }
+
+    }
+
+    public void handleStationPlayback(int id) {
+
+        if (mCurrentStation == id && RadioService.isPlaying()) {
+            RadioService.stop(this);
+            return;
+        }
+
+        RadioService.play(this, id);
+        mCurrentStation = id;
 
     }
 
@@ -491,6 +446,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             mBackgroundCanvas.setImageBitmap(bitmap);
         }
 
+        //The following bitmap code was just copied and pasted from Google's Development site.
+
         public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
 
             // Raw height and width of image
@@ -538,6 +495,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         int height = display.getHeight();
         int width = display.getWidth();
         return new Pair<Integer, Integer>(height, width);
+    }
+
+    private void startStationDetailsActivity(String station, int id) {
+        Intent intent = new Intent(this, StationDetailsActivity.class);
+        intent.putExtra(StationDetailsFragment.EXTRA_STATION_NAME, station);
+        intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
+        startActivity(intent);
     }
 
 }
