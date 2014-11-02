@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/transparent"
     android:animateLayoutChanges="true"
-    tools:context="com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment">
+    tools:context=".ui.fragment.StationDetailsFragment">
+
     <ImageView
         android:id="@+id/poster_container"
         android:layout_width="match_parent"
@@ -19,7 +19,13 @@
         android:padding="0dp"
         android:layout_margin="0dp"
         android:scaleType="fitXY"
-        android:src="@drawable/music_poster"/>
+        android:src="@drawable/music_poster" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -39,7 +45,7 @@
             android:textColor="#660066"
             android:layout_marginTop="30dp"
             android:textSize="30sp"
-            android:text="Main"/>
+            android:text="Main" />
 
         <TextView
             android:id="@+id/listener_tv"
@@ -49,16 +55,16 @@
             android:textColor="#660066"
             android:layout_centerHorizontal="true"
             android:layout_below="@id/station_name_tv"
-            android:text="Listeners: 200"/>
+            android:text="Listeners: 200" />
 
         <View
             android:id="@+id/border_one"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#88000000"
+            android:background="@android:color/black"
             android:layout_below="@id/listener_tv"
             android:layout_marginBottom="15dp"
-            android:layout_marginTop="15dp"/>
+            android:layout_marginTop="15dp" />
 
         <TextView
             android:id="@+id/now_playing_label"
@@ -69,16 +75,16 @@
             android:layout_below="@id/border_one"
             android:layout_marginLeft="15dp"
             android:textSize="25sp"
-            android:text="Now Playing"/>
+            android:text="Now Playing" />
 
         <View
             android:id="@+id/border_two"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_below="@id/now_playing_label"
-            android:background="#88000000"
+            android:background="@android:color/black"
             android:layout_marginBottom="15dp"
-            android:layout_marginTop="15dp"/>
+            android:layout_marginTop="15dp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -97,7 +103,7 @@
                 android:textColor="#660066"
                 android:layout_gravity="center_horizontal"
                 android:textSize="20sp"
-                android:text="Score"/>
+                android:text="Score" />
 
             <TextView
                 android:id="@+id/score_tv"
@@ -107,7 +113,18 @@
                 android:textColor="#660066"
                 android:layout_gravity="center_horizontal"
                 android:textSize="15sp"
-                android:text="300"/>
+                android:text="300" />
+
+            <ImageButton
+                android:id="@+id/reddit_url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_launcher"
+                android:visibility="gone" />
 
         </LinearLayout>
 
@@ -120,7 +137,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:layout_marginLeft="15dp"
-            android:text="Song: Days Days Days"/>
+            android:text="Song: Days Days Days" />
 
         <TextView
             android:id="@+id/artist_tv"
@@ -131,7 +148,7 @@
             android:textColor="#660066"
             android:layout_marginTop="5dp"
             android:layout_marginLeft="15dp"
-            android:text="Artist: Three Days Grace"/>
+            android:text="Artist: Three Days Grace" />
 
         <TextView
             android:id="@+id/redditor_tv"
@@ -142,44 +159,37 @@
             android:layout_below="@id/artist_tv"
             android:layout_marginTop="5dp"
             android:layout_marginLeft="15dp"
-            android:text="Redditor: the_rabbit"/>
+            android:text="Redditor: the_rabbit" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
             android:layout_marginLeft="15dp"
             android:layout_marginBottom="5dp"
             android:orientation="horizontal"
+            android:gravity="center_vertical|left"
             android:layout_below="@id/redditor_tv">
 
-            <ImageButton
-                android:id="@+id/reddit_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginRight="5dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_launcher"/>
-
-            <ImageButton
+            <Button
                 android:id="@+id/preview_url"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:padding="0dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginLeft="5dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_launcher"/>
+                android:textColor="@color/station_details_btn_text_color"
+                android:background="@drawable/station_details_btn"
+                android:text="@string/btn_preview" />
 
             <ImageButton
                 android:id="@+id/download_url"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:padding="5dp"
                 android:layout_marginLeft="5dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_launcher"/>
+                android:background="@drawable/station_details_circle_btn"
+                android:src="@drawable/ic_file_download" />
 
         </LinearLayout>
 

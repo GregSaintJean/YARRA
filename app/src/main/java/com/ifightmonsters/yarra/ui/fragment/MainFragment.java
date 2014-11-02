@@ -17,22 +17,21 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.CursorAdapter;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
-import com.ifightmonsters.yarra.data.YarraDbHelper;
 import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.ui.activity.MainActivity;
+import com.ifightmonsters.yarra.ui.activity.StationDetailsActivity;
 
 /**
  * Created by Gregory on 10/31/2014.
@@ -42,24 +41,14 @@ public class MainFragment extends Fragment
         LoaderManager.LoaderCallbacks<Cursor>,
         AdapterView.OnItemClickListener {
 
-    private String songSortOrder = YarraContract.Song.COLUMN_STATUS_ID + " DESC";
+    private String statusSortOrder = YarraContract.Status._ID + " ASC";
 
     private int mCurrentSelection = -1;
 
-    private static final String[] SONG_PROJECTION = {
-            YarraContract.Song.TABLE_NAME + "." + YarraContract.Song._ID,
-            YarraContract.Song.COLUMN_REDDIT_ID,
-            YarraContract.Song.COLUMN_STATUS_ID,
-            YarraContract.Song.COLUMN_TITLE,
-            YarraContract.Song.COLUMN_ARTIST,
-            YarraContract.Song.COLUMN_ALBUM,
-            YarraContract.Song.COLUMN_GENRE,
-            YarraContract.Song.COLUMN_SCORE,
-            YarraContract.Song.COLUMN_REDDIT_TITLE,
-            YarraContract.Song.COLUMN_REDDIT_URL,
-            YarraContract.Song.COLUMN_REDDITOR,
-            YarraContract.Song.COLUMN_DOWNLOAD_URL,
-            YarraContract.Song.COLUMN_PREVIEW_URL
+    private static final String[] STATUS_PROJECTION = {
+            YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID,
+            YarraContract.Status.COLUMN_PLAYLIST,
+            YarraContract.Status.COLUMN_LISTENERS
     };
 
     private LocalBroadcastManager mLocalMgr;
@@ -89,9 +78,8 @@ public class MainFragment extends Fragment
         }
     };
 
-    private int SONG_LOADER = 0;
+    private int STATUS_LOADER = 0;
 
-    private MainApp mApp;
     private MainActivity mActivity;
     private ListView mListView;
     private GridView mGridView;
@@ -107,7 +95,7 @@ public class MainFragment extends Fragment
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(SONG_LOADER, null, this);
+        getLoaderManager().initLoader(STATUS_LOADER, null, this);
     }
 
     @Override
@@ -120,7 +108,6 @@ public class MainFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocalMgr = LocalBroadcastManager.getInstance(mActivity);
-        mApp = (MainApp) mActivity.getApplication();
     }
 
     @Override
@@ -168,11 +155,11 @@ public class MainFragment extends Fragment
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return new CursorLoader(
                 getActivity(),
-                YarraContract.Song.CONTENT_URI,
-                SONG_PROJECTION,
+                YarraContract.Status.CONTENT_URI,
+                STATUS_PROJECTION,
                 null,
                 null,
-                songSortOrder);
+                statusSortOrder);
     }
 
     @Override
@@ -212,11 +199,9 @@ public class MainFragment extends Fragment
     public class StationCursorAdapter extends CursorAdapter {
 
         private TypedArray mStationArray;
-        private String[] mStation;
 
         public StationCursorAdapter(Context context, Cursor c, boolean autoRequery) {
             super(context, c, autoRequery);
-            mStation = context.getResources().getStringArray(R.array.stations);
             mStationArray = getResources().obtainTypedArray(R.array.station_banners);
         }
 
@@ -233,22 +218,51 @@ public class MainFragment extends Fragment
             ((ImageView) view.findViewById(R.id.card_banner))
                     .setImageDrawable(mStationArray.getDrawable(position));
 
-            ((TextView) view.findViewById(R.id.station_name)).setText(mStation[cursor.getPosition()]);
+            String station_name = cursor.getString(cursor.getColumnIndex(YarraContract.Status.COLUMN_PLAYLIST));
 
-            String artist_name = String.format(context.getString(R.string.artist_name),
-                    cursor.getString(YarraDbHelper.SONG_COLUMN_ARTIST));
-            String song_name = String.format(context.getString(R.string.song_name),
-                    cursor.getString(YarraDbHelper.SONG_COLUMN_TITLE));
-            String score = cursor.getString(YarraDbHelper.SONG_COLUMN_SCORE);
-            score = TextUtils.isEmpty(score) ? "0" : score;
+            String listeners = String.format(context.getString(R.string.listeners),
+                    cursor.getString(cursor.getColumnIndex(YarraContract.Status.COLUMN_LISTENERS)));
 
-            score = String.format(context.getString(R.string.score),
-                    score);
+            station_name = (station_name.charAt(0) + "").toUpperCase() + station_name.substring(1);
 
-            ((TextView) view.findViewById(R.id.artist_name)).setText(artist_name);
-            ((TextView) view.findViewById(R.id.song_name)).setText(song_name);
-            ((TextView) view.findViewById(R.id.score)).setText(score);
+            ((TextView) view.findViewById(R.id.station_name)).setText(station_name);
+            ((TextView) view.findViewById(R.id.listeners_tv)).setText(listeners);
+
+            ImageButton infoButton = (ImageButton) view.findViewById(R.id.info_btn);
+            ImageButton playButton = (ImageButton) view.findViewById(R.id.play_btn);
+
+            final String stationN = station_name;
+
+            final int stationId = (int) cursor.getLong(cursor.getColumnIndex(YarraContract.Status._ID));
+
+            infoButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startStationDetailsActivity(stationN, stationId);
+                }
+            });
+
+            playButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Uri stationUri = MainActivity.BASE_ACTIVITY_URI.buildUpon()
+                            .appendPath(MainActivity.PATH_STATION)
+                            .appendPath(Integer.toString(stationId))
+                            .build();
+
+                    mActivity.onFragmentInteraction(stationUri);
+                    mCurrentSelection = position;
+                }
+            });
+
         }
+    }
+
+    private void startStationDetailsActivity(String station, int id) {
+        Intent intent = new Intent(getActivity(), StationDetailsActivity.class);
+        intent.putExtra(StationDetailsFragment.EXTRA_STATION_NAME, station);
+        intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
+        startActivity(intent);
     }
 
 }

@@ -5,6 +5,7 @@
 
     <string name="btn_play">Play</string>
     <string name="btn_stop">Stop</string>
+    <string name="btn_preview">Preview</string>
 
     <string name="status_preparing">Preparing</string>
     <string name="status_playing">Playing</string>
@@ -16,6 +17,7 @@
     <string name="artist_name">Artist: %1$s</string>
     <string name="song_name">Song: %1$s</string>
     <string name="score">Score: %1$s</string>
+    <string name="listeners">Listeners: %1$s</string>
 
     <string name="error_message_connectivity">Network connection lost!</string>
     <string name="error_connectivity">No network connectivity</string>

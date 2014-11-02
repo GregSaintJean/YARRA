@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,49 +11,26 @@
     android:gravity="center"
     android:orientation="vertical"
     android:animateLayoutChanges="true"
-    tools:context="com.ifightmonsters.radioreddit.ui.fragment.MainFragment">
+    tools:context=".ui.fragment.MainFragment">
 
     <GridView
         android:id="@+id/grid"
         android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="5dp"
         android:horizontalSpacing="10dp"
         android:verticalSpacing="10dp"
         android:stretchMode="columnWidth"
-        android:numColumns="2"/>
+        android:numColumns="2" />
 
-    <RelativeLayout
-        android:id="@+id/message_container"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/error_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:visibility="gone">
-        <ImageView
-            android:id="@+id/error_iv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:src="@drawable/ic_signal_wifi_off"/>
-        <TextView
-            android:id="@+id/error_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_iv"
-            android:textColor="@android:color/white"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:text="@string/error_message_connectivity"
-            android:textAlignment="center"/>
-        <TextView
-            android:id="@+id/nav_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_tv"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:textColor="@color/clickable_text"
-            android:text="@string/solution_fix_connectivity"
-            android:textAlignment="center"/>
-    </RelativeLayout>
+        android:textColor="@android:color/white"
+        android:layout_centerInParent="true"
+        android:textAlignment="center"
+        android:visibility="gone" />
 </LinearLayout>

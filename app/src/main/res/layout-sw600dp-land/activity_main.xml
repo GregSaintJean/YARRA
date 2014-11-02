@@ -1,62 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#002654"
-    tools:context="com.ifightmonsters.radioreddit.ui.activity.MainActivity">
+    tools:context=".ui.activity.MainActivity">
 
-    <FrameLayout
-        android:id="@+id/station_container"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"/>
-    <FrameLayout
-        android:id="@+id/station_details_container"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"/>
-
-    <RelativeLayout
-        android:id="@+id/message_container"
-        android:layout_height="match_parent"
+    <ImageView
+        android:id="@+id/background"
         android:layout_width="match_parent"
-        android:background="@android:color/transparent"
-        android:visibility="gone">
-        <ImageView
-            android:id="@+id/error_iv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:src="@drawable/ic_signal_wifi_off"/>
-        <ProgressBar
-            android:id="@+id/progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:visibility="gone"/>
-        <TextView
-            android:id="@+id/error_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_iv"
-            android:textColor="@android:color/white"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:text="@string/error_message_connectivity"
-            android:textAlignment="center"/>
-        <TextView
-            android:id="@+id/nav_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/error_tv"
-            android:layout_marginTop="5dp"
-            android:layout_centerHorizontal="true"
-            android:textColor="@color/clickable_text"
-            android:text="@string/solution_fix_connectivity"
-            android:textAlignment="center"/>
-    </RelativeLayout>
+        android:layout_height="match_parent" />
 
-</LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/station_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:id="@+id/station_details_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <RelativeLayout
+            android:id="@+id/message_container"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:background="@android:color/transparent"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/error_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_signal_wifi_off" />
+
+            <ProgressBar
+                android:id="@+id/progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/error_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/error_iv"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="5dp"
+                android:layout_centerHorizontal="true"
+                android:text="@string/error_message_connectivity"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/nav_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/error_tv"
+                android:layout_marginTop="5dp"
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/clickable_text"
+                android:text="@string/solution_fix_connectivity"
+                android:textAlignment="center" />
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

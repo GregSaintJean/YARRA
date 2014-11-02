@@ -4,4 +4,8 @@
     <color name="text_station_color_activated">@android:color/white</color>
     <color name="text_clickable_normal">#00c0c0</color>
     <color name="text_clickable_pressed">#e31e1e</color>
+    <color name="station_details_btn">#660066</color>
+    <color name="station_details_btn_pressed">@android:color/white</color>
+    <color name="station_details_item_text">@android:color/white</color>
+    <color name="station_details_item_text_pressed">#660066</color>
 </resources>

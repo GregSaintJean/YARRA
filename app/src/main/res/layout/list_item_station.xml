@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingBottom="10dp"
     android:background="@drawable/station_item">
+
     <RelativeLayout
         android:id="@+id/station_container"
         android:layout_width="match_parent"
         android:layout_height="100dp">
+
         <ImageView
             android:id="@+id/card_banner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="0dp"
-            android:scaleType="fitXY"/>
+            android:scaleType="fitXY" />
+
         <TextView
             android:id="@+id/station_name"
             android:layout_width="wrap_content"
@@ -25,39 +27,33 @@
             android:layout_alignParentBottom="true"
             android:textSize="35sp"
             android:text="Main"
-            android:textColor="@android:color/white"/>
+            android:textColor="@android:color/white" />
     </RelativeLayout>
+
     <TextView
-        android:id="@+id/artist_name"
+        android:id="@+id/listeners_tv"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="20dp"
         android:layout_below="@id/station_container"
-        android:maxLength="@integer/max_station_list_text_length"
         android:singleLine="true"
-        android:textColor="@color/station_item_text_color"
-        android:layout_height="wrap_content"/>
-    <TextView
-        android:id="@+id/song_name"
+        android:textColor="@color/station_item_text_color" />
+
+    <ImageButton
+        android:id="@+id/play_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_toRightOf="@id/artist_name"
-        android:layout_alignBottom="@id/artist_name"
-        android:maxLength="@integer/max_station_list_text_length"
-        android:singleLine="true"
-        android:textColor="@color/station_item_text_color"
-        android:layout_gravity="center_horizontal"/>
-    <TextView
-        android:id="@+id/score"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/station_container"
+        android:background="@android:color/transparent" />
+
+    <ImageButton
+        android:id="@+id/info_btn"
         android:layout_width="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="5dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/artist_name"
-        android:layout_alignParentLeft="true"
-        android:ellipsize="marquee"
-        android:singleLine="true"
-        android:textColor="@color/station_item_text_color"/>
+        android:layout_toLeftOf="@id/play_btn"
+        android:layout_below="@id/station_container"
+        android:background="@android:color/transparent" />
 </RelativeLayout>

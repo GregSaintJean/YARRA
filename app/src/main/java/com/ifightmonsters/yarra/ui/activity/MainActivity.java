@@ -6,19 +6,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.UriMatcher;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -31,12 +38,8 @@ import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.fragment.MainFragment;
 import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
-import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
 
     private static final String FRAGMENT_MAIN = "fragment_main";
@@ -53,8 +56,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public static final Uri BASE_ACTIVITY_URI = Uri.parse("app://" + ACTIVITY_AUTHORITY);
 
     public static final String PATH_STATION = "station";
+    public static final String PATH_STATUS = "status";
 
     public static final int STATION = 1;
+    public static final int STATUS = 2;
     private long mCurrentStation = -1;
 
     private boolean mHasConnectivity = false;
@@ -63,7 +68,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static UriMatcher sUriMatcher = buildUriMatcher();
 
     private LocalBroadcastManager mLocalBroadcastMgr;
-    private ImageView mErrorIV;
+    private ImageView mBackgroundIV, mErrorIV;
     private TextView mNavTV, mErrorTV;
     private View mMessageContainer;
     private View mStationContainer;
@@ -136,6 +141,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static final UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         matcher.addURI(ACTIVITY_AUTHORITY, PATH_STATION + "/#", STATION);
+        matcher.addURI(ACTIVITY_AUTHORITY, PATH_STATUS + "/#", STATUS);
         return matcher;
     }
 
@@ -157,6 +163,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         mNavTV = (TextView) findViewById(R.id.nav_tv);
         mNavTV.setOnClickListener(this);
         mProgress = (ProgressBar) findViewById(R.id.progress);
+        mBackgroundIV = (ImageView) findViewById(R.id.background);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
 
         if (savedInstanceState == null) {
@@ -227,6 +234,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         super.onStart();
         registerReceivers();
         checkNetworkConnectivity();
+        setBackgroundImage();
     }
 
     @Override
@@ -264,7 +272,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         switch (match) {
             case STATION:
-                handleStation(ContentUris.parseId(uri));
+                handleStationPlayback(ContentUris.parseId(uri));
+                break;
+            case STATUS:
+                handleFragments(ContentUris.parseId(uri));
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown Uri: " + uri);
@@ -272,7 +283,17 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     }
 
-    private void handleStation(long id) {
+    private void handleFragments(long id) {
+
+        if (findViewById(R.id.station_details_container) != null) {
+
+        } else {
+
+        }
+
+    }
+
+    private void handleStationPlayback(long id) {
 
         if (mCurrentStation == id && RadioService.isPlaying()) {
             RadioService.stop(this);
@@ -321,7 +342,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             }
 
             if (nextFragment == null) {
-                nextFragment = StationDetailsFragment.newInstance();
+                //TODO Rewrite fragment handling
+                //nextFragment = StationDetailsFragment.newInstance();
             }
 
             switch ((int) mCurrentStation) {
@@ -435,7 +457,87 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         mErrorTV.setVisibility(View.GONE);
         mNavTV.setVisibility(View.GONE);
         invalidateOptionsMenu();
+    }
 
+    private void setBackgroundImage() {
+        Pair<Integer, Integer> size = getScreenSize();
+        new ResizeBackgroundImageTask(this, R.drawable.background,
+                mBackgroundIV).execute(size.first, size.second);
+    }
+
+    private static class ResizeBackgroundImageTask extends AsyncTask<Integer, Void, Bitmap> {
+
+        private Context mCtx;
+        private int mResId;
+        private ImageView mBackgroundCanvas;
+
+        public ResizeBackgroundImageTask(Context ctx,
+                                         int resId,
+                                         ImageView view) {
+            mCtx = ctx;
+            mResId = resId;
+            mBackgroundCanvas = view;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Integer... params) {
+            return decodeSampledBitmapFromResource(
+                    mCtx.getResources(), mResId, params[0], params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            mBackgroundCanvas.setImageBitmap(bitmap);
+        }
+
+        public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+
+            // Raw height and width of image
+            final int height = options.outHeight;
+            final int width = options.outWidth;
+            int inSampleSize = 1;
+
+            if (height > reqHeight || width > reqWidth) {
+
+                final int halfHeight = height / 2;
+                final int halfWidth = width / 2;
+
+                // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                // height and width larger than the requested height and width.
+                while ((halfHeight / inSampleSize) > reqHeight
+                        && (halfWidth / inSampleSize) > reqWidth) {
+                    inSampleSize *= 2;
+                }
+            }
+
+            return inSampleSize;
+        }
+
+        public Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+                                                      int reqWidth, int reqHeight) {
+
+            // First decode with inJustDecodeBounds=true to check dimensions
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeResource(res, resId, options);
+
+            // Calculate inSampleSize
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+            // Decode bitmap with inSampleSize set
+            options.inJustDecodeBounds = false;
+            return BitmapFactory.decodeResource(res, resId, options);
+        }
+    }
+
+    public Pair<Integer, Integer> getScreenSize() {
+        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
+                .getDefaultDisplay();
+
+        int height = display.getHeight();
+        int width = display.getWidth();
+        return new Pair<Integer, Integer>(height, width);
     }
 
 }

@@ -3,6 +3,7 @@
     <integer name="max_station_list_text_length">25</integer>
     <string name="first_launch" translatable="false">first_launch</string>
     <string name="sync_timestamp" translatable="false">sync_timestamp</string>
+    <bool name="is_two_pane">false</bool>
 
     <string name="pref_sync_interval" translatable="false">sync_interval</string>
 
@@ -22,5 +23,17 @@
         <item>@drawable/card_rock</item>
         <item>@drawable/card_metal</item>
         <item>@drawable/card_random</item>
+        <item>@drawable/card_talk</item>
+    </array>
+
+    <array name="station_posters">
+        <item>@drawable/music_poster</item>
+        <item>@drawable/electronic_music_poster</item>
+        <item>@drawable/indie_poster</item>
+        <item>@drawable/hiphop_poster</item>
+        <item>@drawable/rock_poster</item>
+        <item>@drawable/metal_poster</item>
+        <item>@drawable/random_poster</item>
+        <item>@drawable/talk_poster</item>
     </array>
 </resources>

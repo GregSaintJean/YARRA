@@ -2,6 +2,8 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item tools:targetApi="11" name="android:windowActionBarOverlay">true</item>
+        <item name="windowActionBarOverlay">true</item>
         <item tools:targetApi="11" name="android:actionBarStyle">@style/CustomActionBar</item>
         <item name="actionBarStyle">@style/CustomActionBar</item>
     </style>

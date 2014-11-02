@@ -38,9 +38,6 @@ import com.ifightmonsters.yarra.utils.NetworkUtils;
 import java.io.IOException;
 import java.util.Date;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public class RadioService extends Service
         implements
         MediaPlayer.OnCompletionListener,
