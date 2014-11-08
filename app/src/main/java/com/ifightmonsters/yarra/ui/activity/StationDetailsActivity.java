@@ -13,16 +13,12 @@ public class StationDetailsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_station_details);
         Bundle args = getIntent().getExtras();
-        if (args == null
-                || !args.containsKey(StationDetailsFragment.EXTRA_STATION_NAME)
-                || !args.containsKey(StationDetailsFragment.EXTRA_STATION_ID)) {
+        if (args == null || !args.containsKey(StationDetailsFragment.EXTRA_STATION_ID)) {
             finish();
         }
         StationDetailsFragment fragment =
                 StationDetailsFragment
-                        .newInstance(
-                                args.getString(StationDetailsFragment.EXTRA_STATION_NAME),
-                                args.getInt(StationDetailsFragment.EXTRA_STATION_ID));
+                        .newInstance(args.getLong(StationDetailsFragment.EXTRA_STATION_ID));
         getSupportFragmentManager()
                 .beginTransaction().add(R.id.station_details_container, fragment).commit();
     }

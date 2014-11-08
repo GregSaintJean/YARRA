@@ -1,13 +1,15 @@
 package com.ifightmonsters.yarra.ui.fragment;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +21,6 @@ import android.widget.TextView;
 
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
-import com.ifightmonsters.yarra.ui.activity.MainActivity;
 
 /**
  * Created by Gregory on 10/31/2014.
@@ -29,59 +30,21 @@ public class StationDetailsFragment extends Fragment
         View.OnClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String EXTRA_STATION_NAME
-            = "com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment.EXTRA_STATION_NAME";
-
     public static final String EXTRA_STATION_ID
             = "com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment.EXTRA_STATION_ID";
 
-    public static final String[] STATUS_PROJECTION = {
-            YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID,
-            YarraContract.Status.COLUMN_LISTENERS,
-            YarraContract.Status.COLUMN_PLAYLIST
-    };
-
-    public static final String[] SONG_PROJECTION = {
-            YarraContract.Song.TABLE_NAME + "." + YarraContract.Song._ID,
-            YarraContract.Song.COLUMN_ALBUM,
-            YarraContract.Song.COLUMN_ARTIST,
-            YarraContract.Song.COLUMN_GENRE,
-            YarraContract.Song.COLUMN_REDDIT_TITLE,
-            YarraContract.Song.COLUMN_REDDIT_URL,
-            YarraContract.Song.COLUMN_DOWNLOAD_URL,
-            YarraContract.Song.COLUMN_PREVIEW_URL,
-            YarraContract.Song.COLUMN_SCORE
-    };
-
-    private final int STATUS_LOADER = 0;
-    private final int SONG_LOADER = 1;
-
-    private MainActivity mActivity;
+    private final int STATUS_WITH_STATUS_LOADER = 0;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(STATUS_LOADER, null, this);
-        getLoaderManager().initLoader(SONG_LOADER, null, this);
+        getLoaderManager().initLoader(STATUS_WITH_STATUS_LOADER, null, this);
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        mActivity = (MainActivity) activity;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mActivity = null;
-    }
-
-    public static StationDetailsFragment newInstance(String station_name, int station_id) {
+    public static StationDetailsFragment newInstance(long station_id) {
         StationDetailsFragment fragment = new StationDetailsFragment();
         Bundle args = new Bundle();
-        args.putString(EXTRA_STATION_NAME, station_name);
-        args.putInt(EXTRA_STATION_ID, station_id);
+        args.putLong(EXTRA_STATION_ID, station_id);
         fragment.setArguments(args);
         return fragment;
     }
@@ -95,16 +58,17 @@ public class StationDetailsFragment extends Fragment
     private ImageButton mRedditUrlBtn, mDownloadUrlBtn;
     private Button mPreviewUrlBtn;
     private ProgressBar mProgress;
+    private View mBorderOne, mBorderTwo, mNowPlayingLabel;
 
-    private int mStationId;
-    private String mDownloadUrl, mPreviewUrl, mRedditUrl, mStation;
+    private long mStationId;
+    private String mDownloadUrl, mPreviewUrl, mRedditUrl;
+    private Cursor mCursor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        mStation = getArguments().getString(EXTRA_STATION_NAME);
-        mStationId = getArguments().getInt(EXTRA_STATION_ID);
+        mStationId = getArguments().getLong(EXTRA_STATION_ID);
     }
 
     @Override
@@ -122,6 +86,9 @@ public class StationDetailsFragment extends Fragment
         mPreviewUrlBtn = (Button) root.findViewById(R.id.preview_url);
         mDownloadUrlBtn = (ImageButton) root.findViewById(R.id.download_url);
         mProgress = (ProgressBar) root.findViewById(R.id.progress);
+        mBorderOne = root.findViewById(R.id.border_one);
+        mBorderTwo = root.findViewById(R.id.border_two);
+        mNowPlayingLabel = root.findViewById(R.id.now_playing_label);
         mRedditUrlBtn.setOnClickListener(this);
         mPreviewUrlBtn.setOnClickListener(this);
         mDownloadUrlBtn.setOnClickListener(this);
@@ -129,40 +96,16 @@ public class StationDetailsFragment extends Fragment
     }
 
     @Override
-    public void onClick(View v) {
-
-        if (v.getId() == mRedditUrlBtn.getId()) {
-
-        }
-
-        if (v.getId() == mPreviewUrlBtn.getId()) {
-
-        }
-
-        if (v.getId() == mDownloadUrlBtn.getId()) {
-
-        }
-
-    }
-
-    @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 
-        if (i == STATUS_LOADER) {
-            return new CursorLoader(getActivity(),
-                    YarraContract.Status.CONTENT_URI,
-                    STATUS_PROJECTION,
-                    null,
-                    null,
-                    null);
-        } else {
-            return new CursorLoader(getActivity(),
-                    YarraContract.Song.CONTENT_URI,
-                    SONG_PROJECTION,
-                    null,
-                    null,
-                    null);
-        }
+        showProgress(true);
+
+        return new CursorLoader(getActivity(),
+                YarraContract.Status.buildStatusUri(mStationId),
+                YarraContract.Status.STATUS_WITH_SONG_PROJECTION,
+                null,
+                null,
+                null);
     }
 
     @Override
@@ -170,11 +113,47 @@ public class StationDetailsFragment extends Fragment
 
         if (cursor != null && cursor.getCount() > 0) {
 
-            if (cursorLoader.getId() == STATUS_LOADER) {
+            if (cursorLoader.getId() == STATUS_WITH_STATUS_LOADER) {
 
+                mCursor = cursor;
+                mCursor.moveToFirst();
 
-            } else if (cursorLoader.getId() == SONG_LOADER) {
+                String listeners = String.format(getString(R.string.listeners),
+                        mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_LISTENERS)));
 
+                String artist_name = String.format(getString(R.string.artist_name),
+                        mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_ARTIST)));
+
+                String song_name = String.format(getString(R.string.song_name),
+                        mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_TITLE)));
+
+                String score = String.format(getString(R.string.score),
+                        mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_SCORE)));
+
+                mStationName.setText(mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_PLAYLIST)));
+                mArtistName.setText(artist_name);
+                mListeners.setText(listeners);
+                mScore.setText(score);
+                mRedditor.setText(mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_REDDITOR)));
+                mSongName.setText(song_name);
+
+                String redditUrl = mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_REDDIT_URL));
+                String downloadUrl = mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_DOWNLOAD_URL));
+                String previewUrl = mCursor.getString(mCursor.getColumnIndex(YarraContract.Status.JOIN_COLUMN_PREVIEW_URL));
+
+                if (!TextUtils.isEmpty(redditUrl)) {
+                    mRedditUrl = redditUrl;
+                }
+
+                if (!TextUtils.isEmpty(downloadUrl)) {
+                    mDownloadUrl = redditUrl;
+                }
+
+                if (!TextUtils.isEmpty(previewUrl)) {
+                    mPreviewUrl = previewUrl;
+                }
+
+                showProgress(false);
             }
 
         }
@@ -183,6 +162,76 @@ public class StationDetailsFragment extends Fragment
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        mCursor.close();
+        showProgress(true);
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        if (v.getId() == mRedditUrlBtn.getId()) {
+            openUrl(mRedditUrl);
+        }
+
+        if (v.getId() == mPreviewUrlBtn.getId()) {
+            openUrl(mPreviewUrl);
+        }
+
+        if (v.getId() == mDownloadUrlBtn.getId()) {
+            openUrl(mDownloadUrl);
+        }
+
+    }
+
+    private void showProgress(boolean show) {
+
+        if (show) {
+            mProgress.setVisibility(View.VISIBLE);
+            mListeners.setVisibility(View.GONE);
+            mBorderOne.setVisibility(View.GONE);
+            mBorderTwo.setVisibility(View.GONE);
+            mNowPlayingLabel.setVisibility(View.GONE);
+            mScore.setVisibility(View.GONE);
+            mStationName.setVisibility(View.GONE);
+            mSongName.setVisibility(View.GONE);
+            mArtistName.setVisibility(View.GONE);
+            mRedditor.setVisibility(View.GONE);
+            mRedditUrlBtn.setVisibility(View.GONE);
+            mPreviewUrlBtn.setVisibility(View.GONE);
+            mDownloadUrlBtn.setVisibility(View.GONE);
+        } else {
+            mProgress.setVisibility(View.GONE);
+            mListeners.setVisibility(View.VISIBLE);
+            mBorderOne.setVisibility(View.VISIBLE);
+            mBorderTwo.setVisibility(View.VISIBLE);
+            mNowPlayingLabel.setVisibility(View.VISIBLE);
+            mScore.setVisibility(View.VISIBLE);
+            mStationName.setVisibility(View.VISIBLE);
+            mSongName.setVisibility(View.VISIBLE);
+            mArtistName.setVisibility(View.VISIBLE);
+            mRedditor.setVisibility(View.VISIBLE);
+
+            if (mDownloadUrl != null) {
+                mDownloadUrlBtn.setVisibility(View.VISIBLE);
+            }
+
+            if (mPreviewUrl != null) {
+                mPreviewUrlBtn.setVisibility(View.VISIBLE);
+            }
+
+            if (mRedditUrl != null) {
+                mRedditUrlBtn.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void openUrl(String url) {
+
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivity(intent);
+        }
 
     }
 

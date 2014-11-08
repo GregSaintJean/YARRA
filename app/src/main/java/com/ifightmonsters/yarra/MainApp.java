@@ -2,6 +2,7 @@ package com.ifightmonsters.yarra;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
@@ -14,25 +15,25 @@ import java.util.Date;
  */
 public class MainApp extends Application {
 
-    public final boolean isFirstRun(){
+    public final boolean isFirstRun() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         return sharedPref.getBoolean(getString(R.string.first_launch), true);
     }
 
-    public final boolean setFirstRun(){
+    public final boolean setFirstRun() {
         SharedPreferences.Editor editor
                 = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putBoolean(getString((R.string.first_launch)), false);
         return editor.commit();
     }
 
-    public final Date getLastSyncTimestamp(){
+    public final Date getLastSyncTimestamp() {
         SharedPreferences sharedPref
                 = PreferenceManager.getDefaultSharedPreferences(this);
 
         String timestampDateString = sharedPref.getString(getString(R.string.sync_timestamp), "");
 
-        if(TextUtils.isEmpty(timestampDateString)){
+        if (TextUtils.isEmpty(timestampDateString)) {
             return null;
         }
 
@@ -40,7 +41,7 @@ public class MainApp extends Application {
         return timestampDate;
     }
 
-    public final void setSyncTimestamp(){
+    public final void setSyncTimestamp() {
         SharedPreferences sharedPref
                 = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -49,6 +50,14 @@ public class MainApp extends Application {
         String storageDate = ChronoUtils.getStorageFormattedDate(currentDate);
         editor.putString(getString(R.string.sync_timestamp), storageDate);
         editor.commit();
+    }
+
+    public final boolean isTwoPane() {
+        return getResources().getBoolean(R.bool.is_two_pane);
+    }
+
+    public final boolean isLandscape() {
+        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
 }

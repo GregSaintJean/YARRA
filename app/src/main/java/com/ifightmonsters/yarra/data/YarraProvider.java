@@ -7,6 +7,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 /**
@@ -14,14 +15,12 @@ import android.net.Uri;
  */
 public class YarraProvider extends ContentProvider {
 
-    private static final String LOG = "RadioRedditProvider";
+    private static final int STATUS = 100;
+    public static final int STATUS_ID = 101;
+    private static final int SONG = 200;
+    private static final int SONG_ID = 201;
 
-    private static final int STATUS = 1;
-    private static final int STATUS_ID = 2;
-    private static final int SONG = 3;
-    private static final int SONG_ID = 4;
-
-    private static final UriMatcher sUriMatcher = buildUriMatcher();
+    public static final UriMatcher sUriMatcher = buildUriMatcher();
     private YarraDbHelper mOpenHelper;
 
     private static UriMatcher buildUriMatcher() {
@@ -37,6 +36,29 @@ public class YarraProvider extends ContentProvider {
         return matcher;
     }
 
+    private static final SQLiteQueryBuilder sStatusIdQueryBuilder;
+
+    static {
+        sStatusIdQueryBuilder = new SQLiteQueryBuilder();
+        sStatusIdQueryBuilder.setTables(
+                YarraContract.Status.TABLE_NAME + " INNER JOIN " +
+                        YarraContract.Song.TABLE_NAME +
+                        " ON " + YarraContract.Status.TABLE_NAME +
+                        "." + YarraContract.Status._ID +
+                        " = " + YarraContract.Song.TABLE_NAME +
+                        "." + YarraContract.Song.COLUMN_STATUS_ID);
+    }
+
+    private Cursor getStatusById(Uri uri, String[] projection, String sortOrder) {
+        return sStatusIdQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                YarraContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
+                null,
+                null,
+                null,
+                sortOrder);
+    }
+
     @Override
     public boolean onCreate() {
         mOpenHelper = new YarraDbHelper(getContext());
@@ -49,6 +71,7 @@ public class YarraProvider extends ContentProvider {
         Cursor cursor;
 
         switch (sUriMatcher.match(uri)) {
+
             case STATUS:
                 cursor = mOpenHelper.getReadableDatabase().query(
                         YarraContract.Status.TABLE_NAME,
@@ -61,15 +84,7 @@ public class YarraProvider extends ContentProvider {
                 );
                 break;
             case STATUS_ID:
-                cursor = mOpenHelper.getReadableDatabase().query(
-                        YarraContract.Status.TABLE_NAME,
-                        projection,
-                        YarraContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
-                        null,
-                        null,
-                        null,
-                        sortOrder
-                );
+                cursor = getStatusById(uri, projection, sortOrder);
                 break;
             case SONG:
                 cursor = mOpenHelper.getReadableDatabase().query(
@@ -162,14 +177,10 @@ public class YarraProvider extends ContentProvider {
         switch (match) {
 
             case STATUS:
-                rowsDeleted = db.delete(
-                        YarraContract.Status.TABLE_NAME, selection, selectionArgs
-                );
+                rowsDeleted = db.delete(YarraContract.Status.TABLE_NAME, selection, selectionArgs);
                 break;
             case SONG:
-                rowsDeleted = db.delete(
-                        YarraContract.Song.TABLE_NAME, selection, selectionArgs
-                );
+                rowsDeleted = db.delete(YarraContract.Song.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -190,14 +201,10 @@ public class YarraProvider extends ContentProvider {
         switch (match) {
 
             case STATUS:
-                rowsUpdated = db.update(
-                        YarraContract.Status.TABLE_NAME, values, selection, selectionArgs
-                );
+                rowsUpdated = db.update(YarraContract.Status.TABLE_NAME, values, selection, selectionArgs);
                 break;
             case SONG:
-                rowsUpdated = db.update(
-                        YarraContract.Song.TABLE_NAME, values, selection, selectionArgs
-                );
+                rowsUpdated = db.update(YarraContract.Song.TABLE_NAME, values, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

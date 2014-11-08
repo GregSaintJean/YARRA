@@ -19,8 +19,8 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -28,14 +28,15 @@ import android.widget.TextView;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
 import com.ifightmonsters.yarra.service.RadioService;
-import com.ifightmonsters.yarra.ui.activity.MainActivity;
+import com.ifightmonsters.yarra.ui.activity.OnFragmentInteractionListener;
 
 /**
  * Created by Gregory on 10/31/2014.
  */
 public class MainFragment extends Fragment
         implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>,
+        AdapterView.OnItemClickListener {
 
     private String statusSortOrder = YarraContract.Status._ID + " ASC";
 
@@ -76,10 +77,11 @@ public class MainFragment extends Fragment
 
     private int STATUS_LOADER = 0;
 
-    private MainActivity mActivity;
+    private OnFragmentInteractionListener mListener;
     private ListView mListView;
     private GridView mGridView;
     private CursorAdapter mAdapter;
+    private Cursor mCursor;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -97,13 +99,20 @@ public class MainFragment extends Fragment
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mActivity = (MainActivity) activity;
+        mListener = (OnFragmentInteractionListener) activity;
     }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mLocalMgr = LocalBroadcastManager.getInstance(mActivity);
+        mLocalMgr = LocalBroadcastManager.getInstance(getActivity());
     }
 
     @Override
@@ -111,15 +120,17 @@ public class MainFragment extends Fragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_main, container, false);
-        mAdapter = new StationCursorAdapter(mActivity, null, false);
+        mAdapter = new StationCursorAdapter(getActivity(), null, false);
         View lister = v.findViewById(R.id.list);
 
         if (lister == null) {
             mGridView = (GridView) v.findViewById(R.id.grid);
             mGridView.setAdapter(mAdapter);
+            mGridView.setOnItemClickListener(this);
         } else {
             mListView = (ListView) v.findViewById(R.id.list);
             mListView.setAdapter(mAdapter);
+            mListView.setOnItemClickListener(this);
         }
         return v;
     }
@@ -158,7 +169,8 @@ public class MainFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoaderLoader, Cursor cursor) {
-        mAdapter.swapCursor(cursor);
+        mCursor = cursor;
+        mAdapter.swapCursor(mCursor);
     }
 
     @Override
@@ -174,9 +186,16 @@ public class MainFragment extends Fragment
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        mActivity = null;
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        if (mCursor.moveToPosition(position)) {
+            long statusId =
+                    mCursor.getLong(mCursor.getColumnIndex(
+                            YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID));
+            mListener.onFragmentInteraction(YarraContract.Status.buildStatusUri(statusId));
+            mCurrentSelection = position;
+        }
+
     }
 
     public class StationCursorAdapter extends CursorAdapter {
@@ -210,27 +229,6 @@ public class MainFragment extends Fragment
 
             ((TextView) view.findViewById(R.id.station_name)).setText(station_name);
             ((TextView) view.findViewById(R.id.listeners_tv)).setText(listeners);
-
-            ImageButton infoButton = (ImageButton) view.findViewById(R.id.info_btn);
-            ImageButton playButton = (ImageButton) view.findViewById(R.id.play_btn);
-
-            final String stationN = station_name;
-
-            final int stationId = (int) cursor.getLong(cursor.getColumnIndex(YarraContract.Status._ID));
-
-            infoButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mActivity.handleFragments(stationN, stationId, position);
-                }
-            });
-
-            playButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mActivity.handleStationPlayback(position);
-                }
-            });
 
         }
     }

@@ -26,7 +26,6 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentBottom="true"
             android:textSize="35sp"
-            android:text="Main"
             android:textColor="@android:color/white" />
     </RelativeLayout>
 
@@ -40,20 +39,4 @@
         android:layout_below="@id/station_container"
         android:singleLine="true"
         android:textColor="@color/station_item_text_color" />
-
-    <ImageButton
-        android:id="@+id/play_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/station_container"
-        android:background="@android:color/transparent" />
-
-    <ImageButton
-        android:id="@+id/info_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toLeftOf="@id/play_btn"
-        android:layout_below="@id/station_container"
-        android:background="@android:color/transparent" />
 </RelativeLayout>

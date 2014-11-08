@@ -43,6 +43,34 @@ public final class YarraContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        public static final String JOIN_COLUMN_LISTENERS = TABLE_NAME + "." + COLUMN_LISTENERS;
+        public static final String JOIN_COLUMN_PLAYLIST = TABLE_NAME + "." + COLUMN_PLAYLIST;
+        public static final String JOIN_COLUMN_ALBUM = Song.TABLE_NAME + "." + Song.COLUMN_ALBUM;
+        public static final String JOIN_COLUMN_ARTIST = Song.TABLE_NAME + "." + Song.COLUMN_ARTIST;
+        public static final String JOIN_COLUMN_GENRE = Song.TABLE_NAME + "." + Song.COLUMN_GENRE;
+        public static final String JOIN_COLUMN_REDDIT_TITLE = Song.TABLE_NAME + "." + Song.COLUMN_REDDIT_TITLE;
+        public static final String JOIN_COLUMN_REDDIT_URL = Song.TABLE_NAME + "." + Song.COLUMN_REDDIT_URL;
+        public static final String JOIN_COLUMN_DOWNLOAD_URL = Song.TABLE_NAME + "." + Song.COLUMN_DOWNLOAD_URL;
+        public static final String JOIN_COLUMN_PREVIEW_URL = Song.TABLE_NAME + "." + Song.COLUMN_PREVIEW_URL;
+        public static final String JOIN_COLUMN_SCORE = Song.TABLE_NAME + "." + Song.COLUMN_SCORE;
+        public static final String JOIN_COLUMN_REDDITOR = Song.TABLE_NAME + "." + Song.COLUMN_REDDITOR;
+        public static final String JOIN_COLUMN_TITLE = Song.TABLE_NAME + "." + Song.COLUMN_TITLE;
+
+        public static final String[] STATUS_WITH_SONG_PROJECTION = {
+                JOIN_COLUMN_LISTENERS,
+                JOIN_COLUMN_PLAYLIST,
+                JOIN_COLUMN_ALBUM,
+                JOIN_COLUMN_ARTIST,
+                JOIN_COLUMN_TITLE,
+                JOIN_COLUMN_GENRE,
+                JOIN_COLUMN_REDDIT_TITLE,
+                JOIN_COLUMN_REDDIT_URL,
+                JOIN_COLUMN_DOWNLOAD_URL,
+                JOIN_COLUMN_PREVIEW_URL,
+                JOIN_COLUMN_SCORE,
+                JOIN_COLUMN_REDDITOR
+        };
+
     }
 
     public static final class Song implements BaseColumns {

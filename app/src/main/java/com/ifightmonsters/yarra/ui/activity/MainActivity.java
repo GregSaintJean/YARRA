@@ -1,27 +1,22 @@
 package com.ifightmonsters.yarra.ui.activity;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,7 +24,7 @@ import android.widget.Toast;
 
 import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
-import com.ifightmonsters.yarra.constant.Station;
+import com.ifightmonsters.yarra.data.YarraProvider;
 import com.ifightmonsters.yarra.service.RadioService;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.fragment.MainFragment;
@@ -37,16 +32,10 @@ import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
 
-public class MainActivity extends ActionBarActivity implements View.OnClickListener {
+public class MainActivity extends ActionBarActivity
+        implements View.OnClickListener,
+        OnFragmentInteractionListener {
 
-    private static final String FRAGMENT_MAIN = "fragment_main";
-    private static final String FRAGMENT_ELECTRONIC = "fragment_electronic";
-    private static final String FRAGMENT_HIPHOP = "fragment_hiphop";
-    private static final String FRAGMENT_INDIE = "fragment_indie";
-    private static final String FRAGMENT_ROCK = "fragment_rock";
-    private static final String FRAGMENT_METAL = "fragment_metal";
-    private static final String FRAGMENT_RANDOM = "fragment_random";
-    private static final String FRAGMENT_TALK = "fragment_talk";
     private static final String FRAGMENT_PLACEHOLDER = "fragment_placeholder";
 
     private long mCurrentStation = -1;
@@ -146,16 +135,17 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         mBackgroundIV = (ImageView) findViewById(R.id.background);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
 
+        if (findViewById(R.id.station_details_container) != null) {
+            mStationDetailsContainer = findViewById(R.id.station_details_container);
+        }
+
         if (savedInstanceState == null) {
 
             Fragment mainFragment = MainFragment.newInstance();
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.station_container, mainFragment).commit();
 
-            if (findViewById(R.id.station_details_container) != null) {
-
-                mStationDetailsContainer = findViewById(R.id.station_details_container);
-
+            if (mStationDetailsContainer != null) {
                 Fragment placeHolderFragment
                         = getSupportFragmentManager().findFragmentByTag(FRAGMENT_PLACEHOLDER);
 
@@ -213,7 +203,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         super.onStart();
         registerReceivers();
         checkNetworkConnectivity();
-        setBackgroundImage();
     }
 
     @Override
@@ -245,106 +234,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         unregisterReceiver(mMainActivityReceiver);
     }
 
-    /*
-        I wrote the parameters for this method and thought "this just got stupid".
-        There is probably a way to simplify this but I can't think of it right now.
-        I don't like this at all.
-     */
-    public void handleFragments(String station_name, int databaseId, int stationid) {
-
-        if (findViewById(R.id.station_details_container) != null) {
-
-            FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
-            Fragment nextFragment;
-
-            switch (stationid) {
-                case Station.MAIN:
-                default:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_MAIN);
-                    break;
-                case Station.ELECTRONIC:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_ELECTRONIC);
-                    break;
-                case Station.HIPHOP:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_HIPHOP);
-                    break;
-                case Station.INDIE:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_INDIE);
-                    break;
-                case Station.METAL:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_METAL);
-                    break;
-                case Station.RANDOM:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_RANDOM);
-                    break;
-                case Station.ROCK:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_ROCK);
-                    break;
-                case Station.TALK:
-                    nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_TALK);
-                    break;
-            }
-
-            if (nextFragment == null) {
-                nextFragment = StationDetailsFragment.newInstance(station_name, databaseId);
-            }
-
-            switch (stationid) {
-                case Station.MAIN:
-                default:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_MAIN);
-                    break;
-                case Station.ELECTRONIC:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_ELECTRONIC);
-                    break;
-                case Station.HIPHOP:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_HIPHOP);
-                    break;
-                case Station.INDIE:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_INDIE);
-                    break;
-                case Station.METAL:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_METAL);
-                    break;
-                case Station.RANDOM:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_RANDOM);
-                    break;
-                case Station.ROCK:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_ROCK);
-                    break;
-                case Station.TALK:
-                    trans.replace(R.id.station_details_container, nextFragment,
-                            FRAGMENT_TALK);
-                    break;
-            }
-            trans.commit();
-        } else {
-            startStationDetailsActivity(station_name, databaseId);
-        }
-
-    }
-
-    public void handleStationPlayback(int id) {
-
-        if (mCurrentStation == id && RadioService.isPlaying()) {
-            RadioService.stop(this);
-            return;
-        }
-
-        RadioService.play(this, id);
-        mCurrentStation = id;
-
-    }
-
     private void placePlaceHolderFragment() {
-        if (findViewById(R.id.station_details_container) != null) {
+        if (mStationDetailsContainer != null) {
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             Fragment nextFragment = getSupportFragmentManager().findFragmentByTag(FRAGMENT_PLACEHOLDER);
             if (nextFragment == null) {
@@ -355,11 +246,57 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+        final int match = YarraProvider.sUriMatcher.match(uri);
+
+        switch (match) {
+            case YarraProvider.STATUS_ID:
+                handleStationPlayback(ContentUris.parseId(uri));
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown Uri: " + uri);
+        }
+
+    }
+
+    public void handleStationPlayback(long id) {
+        if (mCurrentStation == id && RadioService.isPlaying()) {
+            RadioService.stop(this);
+            return;
+        }
+
+        RadioService.play(this, id);
+        handleFragments(mCurrentStation);
+        mCurrentStation = id;
+    }
+
+    public void handleFragments(long id) {
+
+        if (id != mCurrentStation) {
+            if (mStationDetailsContainer != null) {
+                FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
+                trans.replace(R.id.station_details_container, StationDetailsFragment.newInstance(id));
+                trans.commit();
+            } else {
+                startStationDetailsActivity(id);
+            }
+        }
+    }
+
+    private void startStationDetailsActivity(long id) {
+        Intent intent = new Intent(this, StationDetailsActivity.class);
+        intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
+        startActivity(intent);
+    }
+
     private void checkNetworkConnectivity() {
+
         if (NetworkUtils.hasNetworkConnectivity(this)) {
             mStationContainer.setVisibility(View.VISIBLE);
 
-            if (findViewById(R.id.station_details_container) != null) {
+            if (mStationDetailsContainer != null) {
                 mStationDetailsContainer.setVisibility(View.VISIBLE);
             }
 
@@ -372,7 +309,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
             mStationContainer.setVisibility(View.GONE);
 
-            if (findViewById(R.id.station_details_container) != null) {
+            if (mStationDetailsContainer != null) {
                 mStationDetailsContainer.setVisibility(View.GONE);
             }
 
@@ -394,7 +331,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             mStationContainer.setVisibility(View.GONE);
             mMessageContainer.setVisibility(View.VISIBLE);
 
-            if (findViewById(R.id.station_details_container) != null) {
+            if (mStationDetailsContainer != null) {
                 mStationDetailsContainer.setVisibility(View.GONE);
             }
 
@@ -403,7 +340,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             mStationContainer.setVisibility(View.VISIBLE);
             mMessageContainer.setVisibility(View.GONE);
 
-            if (findViewById(R.id.station_details_container) != null) {
+            if (mStationDetailsContainer != null) {
                 mStationDetailsContainer.setVisibility(View.VISIBLE);
             }
         }
@@ -412,96 +349,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         mErrorTV.setVisibility(View.GONE);
         mNavTV.setVisibility(View.GONE);
         invalidateOptionsMenu();
-    }
-
-    private void setBackgroundImage() {
-        Pair<Integer, Integer> size = getScreenSize();
-        new ResizeBackgroundImageTask(this, R.drawable.background,
-                mBackgroundIV).execute(size.first, size.second);
-    }
-
-    private static class ResizeBackgroundImageTask extends AsyncTask<Integer, Void, Bitmap> {
-
-        private Context mCtx;
-        private int mResId;
-        private ImageView mBackgroundCanvas;
-
-        public ResizeBackgroundImageTask(Context ctx,
-                                         int resId,
-                                         ImageView view) {
-            mCtx = ctx;
-            mResId = resId;
-            mBackgroundCanvas = view;
-        }
-
-        @Override
-        protected Bitmap doInBackground(Integer... params) {
-            return decodeSampledBitmapFromResource(
-                    mCtx.getResources(), mResId, params[0], params[1]);
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            mBackgroundCanvas.setImageBitmap(bitmap);
-        }
-
-        //The following bitmap code was just copied and pasted from Google's Development site.
-
-        public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-
-            // Raw height and width of image
-            final int height = options.outHeight;
-            final int width = options.outWidth;
-            int inSampleSize = 1;
-
-            if (height > reqHeight || width > reqWidth) {
-
-                final int halfHeight = height / 2;
-                final int halfWidth = width / 2;
-
-                // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-                // height and width larger than the requested height and width.
-                while ((halfHeight / inSampleSize) > reqHeight
-                        && (halfWidth / inSampleSize) > reqWidth) {
-                    inSampleSize *= 2;
-                }
-            }
-
-            return inSampleSize;
-        }
-
-        public Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
-                                                      int reqWidth, int reqHeight) {
-
-            // First decode with inJustDecodeBounds=true to check dimensions
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeResource(res, resId, options);
-
-            // Calculate inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-            // Decode bitmap with inSampleSize set
-            options.inJustDecodeBounds = false;
-            return BitmapFactory.decodeResource(res, resId, options);
-        }
-    }
-
-    public Pair<Integer, Integer> getScreenSize() {
-        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay();
-
-        int height = display.getHeight();
-        int width = display.getWidth();
-        return new Pair<Integer, Integer>(height, width);
-    }
-
-    private void startStationDetailsActivity(String station, int id) {
-        Intent intent = new Intent(this, StationDetailsActivity.class);
-        intent.putExtra(StationDetailsFragment.EXTRA_STATION_NAME, station);
-        intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
-        startActivity(intent);
     }
 
 }

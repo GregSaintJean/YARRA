@@ -8,4 +8,5 @@
     <color name="station_details_btn_pressed">@android:color/white</color>
     <color name="station_details_item_text">@android:color/white</color>
     <color name="station_details_item_text_pressed">#660066</color>
+    <color name="app_background_color">#002654</color>
 </resources>

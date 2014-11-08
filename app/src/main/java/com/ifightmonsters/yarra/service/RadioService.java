@@ -28,7 +28,6 @@ import android.util.Log;
 
 import com.ifightmonsters.yarra.MainApp;
 import com.ifightmonsters.yarra.R;
-import com.ifightmonsters.yarra.constant.Station;
 import com.ifightmonsters.yarra.data.YarraContract;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.activity.MainActivity;
@@ -66,13 +65,9 @@ public class RadioService extends Service
     public static final String BROADCAST_STATUS = BROADCAST + ".status";
     public static final String BROADCAST_KILLED = BROADCAST + ".killed";
 
-    public static final String EXTRA_STATION = EXTRA + ".station";
+    public static final String EXTRA_STATION_ID = EXTRA + ".station";
     public static final String EXTRA_ERROR = EXTRA + ".error";
     public static final String EXTRA_STATUS = EXTRA + ".status";
-
-    public static final String EXTRA_HEADSET_STATE = "state";
-    public static final String EXTRA_HEADSET_NAME = "name";
-    public static final String EXTRA_HEADSET_MICROPHONE = "microphone";
 
     private final String[] STATUS_PROJECTION = {
             YarraContract.Status._ID,
@@ -80,7 +75,7 @@ public class RadioService extends Service
     };
 
     private final String STATUS_SELECTION
-            = YarraContract.Status.COLUMN_PLAYLIST + " = ?";
+            = YarraContract.Status._ID + " = ?";
 
     private static final int SYNC_REQUEST_CODE = 1;
 
@@ -101,6 +96,7 @@ public class RadioService extends Service
 
     private int mCurrentAudioFocus = FOCUS_NOT_FOCUSED;
     private int mCurrentState = STATE_IDLE;
+    private long mCurrentStation;
 
     private final BroadcastReceiver mRadioServiceReceiver = new BroadcastReceiver() {
         @Override
@@ -204,10 +200,10 @@ public class RadioService extends Service
 
         if (action.equals(ACTION_PLAY)) {
             Log.d(LOG, "Received play action");
-            if (extras != null && extras.containsKey(EXTRA_STATION)) {
-                handlePlayAction(extras.getInt(EXTRA_STATION));
+            if (extras != null && extras.containsKey(EXTRA_STATION_ID)) {
+                handlePlayAction(extras.getLong(EXTRA_STATION_ID));
             } else {
-                handlePlayAction(null);
+                stopSelf();
             }
         } else if (action.equals(ACTION_STOP)) {
             Log.d(LOG, "Received stop action");
@@ -292,7 +288,6 @@ public class RadioService extends Service
     }
 
     //TODO Replace with preference or stored last value
-    private int mCurrentStation = Station.MAIN;
 
     private void interruptPlayback() {
         if (mCurrentState == STATE_PLAYING) {
@@ -303,18 +298,10 @@ public class RadioService extends Service
         stopSelf();
     }
 
-    public static void play(Context ctx) {
-        play(ctx, null);
-    }
-
-    public static void play(Context ctx, Integer station) {
+    public static void play(Context ctx, long id) {
         Intent intent = new Intent(ctx, RadioService.class);
         intent.setAction(ACTION_PLAY);
-
-        if (station != null) {
-            intent.putExtra(EXTRA_STATION, station);
-        }
-
+        intent.putExtra(EXTRA_STATION_ID, id);
         ctx.startService(intent);
     }
 
@@ -440,7 +427,7 @@ public class RadioService extends Service
                             YarraContract.Status.CONTENT_URI,
                             STATUS_PROJECTION,
                             STATUS_SELECTION,
-                            new String[]{Station.NAMES[mCurrentStation]},
+                            new String[]{Long.toString(mCurrentStation)},
                             null);
 
             if (c.getCount() > 0 && c.moveToFirst()) {
@@ -555,7 +542,7 @@ public class RadioService extends Service
         broadcastError(R.string.error_empty_intent);
     }
 
-    private void handlePlayAction(Integer station) {
+    private void handlePlayAction(long id) {
 
         if (mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
             return;
@@ -566,9 +553,6 @@ public class RadioService extends Service
         }
 
         if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PREPARING) {
-            if (station == null || mCurrentStation == station.intValue()) {
-                return;
-            }
 
             if (mCurrentState == STATE_PLAYING) {
                 stopPlayer();
@@ -586,7 +570,7 @@ public class RadioService extends Service
             return;
         }
 
-        mCurrentStation = station.intValue();
+        mCurrentStation = id;
         prepStreamPlayback();
     }
 
