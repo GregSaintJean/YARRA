@@ -8,7 +8,7 @@ import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Screen responible for giving the different setting options available for the app
  */
 public class SettingsActivity extends PreferenceActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener {

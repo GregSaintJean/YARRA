@@ -3,7 +3,8 @@ package com.ifightmonsters.yarra.ui.activity;
 import android.net.Uri;
 
 /**
- * Created by Gregory on 11/7/2014.
+ * Responsible for communication between fragments and activities by passing
+ * the appropriate uri for the action the activity needs to do.
  */
 public interface OnFragmentInteractionListener {
 

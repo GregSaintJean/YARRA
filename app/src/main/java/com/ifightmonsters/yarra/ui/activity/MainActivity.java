@@ -32,6 +32,10 @@ import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
 
+/**
+ * First screen the user comes to when they enter the app. Displays a list of radio stations
+ * to play or an appropriate error message when there is something wrong.
+ */
 public class MainActivity extends ActionBarActivity
         implements View.OnClickListener,
         OnFragmentInteractionListener {
@@ -40,11 +44,20 @@ public class MainActivity extends ActionBarActivity
 
     private long mCurrentStation = -1;
 
+    /* Determines whethers or not the device has network connectivity.
+     * Helps with showing the menu button for refreshing data.
+     */
     private boolean mHasConnectivity = false;
+
+    /* Determines whethers or not the app is grabbing data from the servers.
+     * Helps with showing the menu button for refreshing data.
+     */
     private boolean mSyncing = false;
 
+    //For registering broadcast receivers.
     private LocalBroadcastManager mLocalBroadcastMgr;
-    private ImageView mBackgroundIV, mErrorIV;
+
+    private ImageView mErrorIV;
     private TextView mNavTV, mErrorTV;
     private View mMessageContainer;
     private View mStationContainer;
@@ -118,9 +131,12 @@ public class MainActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         MainApp app = (MainApp) getApplicationContext();
+
+        //We want to prepare the app for syncing data on the first run of the app.
         if (app.isFirstRun()) {
             PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
             YarraSyncAdapter.initializeSyncAdapter(this);
+            //After this, every other launch of the app won't rerun this section of code again.
             app.setFirstRun();
         }
         setContentView(R.layout.activity_main);
@@ -132,7 +148,6 @@ public class MainActivity extends ActionBarActivity
         mNavTV = (TextView) findViewById(R.id.nav_tv);
         mNavTV.setOnClickListener(this);
         mProgress = (ProgressBar) findViewById(R.id.progress);
-        mBackgroundIV = (ImageView) findViewById(R.id.background);
         mLocalBroadcastMgr = LocalBroadcastManager.getInstance(this);
 
         if (findViewById(R.id.station_details_container) != null) {
@@ -172,6 +187,11 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        /* We only want the menu option to come up if the device has network connectivity
+         * or if the app isn't grabbing data from the servers. There is no way the app can grab data
+         * if there is no network connectivity and we don't want to submit more than one request
+         * to sync data while the data is already being grabbed.
+        */
         menu.findItem(R.id.action_refresh).setVisible(mHasConnectivity && !mSyncing);
         return super.onPrepareOptionsMenu(menu);
     }
@@ -190,10 +210,16 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
+    /**
+     * Responsible for launching the wifi settings screen for the device.
+     */
     public void launchWifiSettingsActivity() {
         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
     }
 
+    /**
+     * Responsible for launching the settings screen within the app.
+     */
     public void launchSettingsActivity() {
         startActivity(new Intent(this, SettingsActivity.class));
     }
@@ -201,6 +227,9 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
+        /* The activity here is being brought back up so we need to listen for anything that might
+         * require the UI to change based on the situation
+         */
         registerReceivers();
         checkNetworkConnectivity();
     }
@@ -208,31 +237,57 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onStop() {
         super.onStop();
+        //If the activity is suspended, we don't need to listen to anything that would affect the UI
         unregisterReceivers();
     }
 
     @Override
     public void onClick(View v) {
+
+        //This only happens when there is no network connectivity.
         if (v.getId() == R.id.nav_tv) {
             launchWifiSettingsActivity();
         }
     }
 
+    /**
+     * Registers broadcast receivers responsible for listening in on different actions that
+     * happen on the device and within the app.
+     */
     private void registerReceivers() {
+        //"RadioService.BROADCAST_ERRORResponsible for delivering messages from RadioService within the app
+        //"internalFilter" is for listening to broadcasts that happen in the app using a LocalBroadcastManager.
         IntentFilter internalFilter = new IntentFilter(RadioService.BROADCAST_ERROR);
+        //Responsible for updates from RadioService as far as what's playing and what state the RadioService is in
         internalFilter.addAction(RadioService.BROADCAST_STATUS);
+        //Determines if the RadioService is killed
         internalFilter.addAction(RadioService.BROADCAST_KILLED);
+        //Determines when syncing of data against radio reddit is occuring
         internalFilter.addAction(YarraSyncAdapter.BROADCAST_SYNC_BEGIN);
+        //Determines when syncing is completed
         internalFilter.addAction(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED);
+        //"ConnectivityManager.CONNECTIVITY_ACTION" determines when the network connectivity of the device has changed.
+        //The "externalFilter" is for broadcasts that happen on the device.
         IntentFilter externalFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        //Registers filters for broadcasts within the app.
         mLocalBroadcastMgr.registerReceiver(mMainActivityReceiver, internalFilter);
+        //Registers filter for broadcasts that happen on the device.
         registerReceiver(mMainActivityReceiver, externalFilter);
     }
 
+    /**
+     * Unregisters broadcast receivers listening in on different actions that happens on the device and
+     * within the app.
+     */
     private void unregisterReceivers() {
         mLocalBroadcastMgr.unregisterReceiver(mMainActivityReceiver);
         unregisterReceiver(mMainActivityReceiver);
     }
+
+    /**
+     * Responsible for setting back a default transparent fragment into view when no music
+     * is playing
+     */
 
     private void placePlaceHolderFragment() {
         if (mStationDetailsContainer != null) {
@@ -246,6 +301,12 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
+    /**
+     * Responsible for handling communication between fragments and activities.
+     * Receives uris that will determine the action the activity must take.
+     *
+     * @param uri uri determines what action the activity must take
+     */
     @Override
     public void onFragmentInteraction(Uri uri) {
 
@@ -285,12 +346,21 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
+    /**
+     * Starts the StationDetailsActivity if the device is not a tablet
+     *
+     * @param id the id of the station to display information
+     */
     private void startStationDetailsActivity(long id) {
         Intent intent = new Intent(this, StationDetailsActivity.class);
         intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
         startActivity(intent);
     }
 
+    /**
+     * Checks the network connectivity of the device. Will change the layout and display
+     * an option to enable wifi if the device does not have network connectivity.
+     */
     private void checkNetworkConnectivity() {
 
         if (NetworkUtils.hasNetworkConnectivity(this)) {
@@ -321,9 +391,16 @@ public class MainActivity extends ActionBarActivity
             mHasConnectivity = false;
         }
 
+        //If there is no network connectivity, we don't want the option to refresh data.
         invalidateOptionsMenu();
     }
 
+    /**
+     * Responsible for displaying a radial progress view or displaying
+     * a list of stations for the user to play
+     *
+     * @param show whether or not the display the progress view or the list of radio stations to play
+     */
     private void showSyncing(boolean show) {
 
         if (show) {
@@ -348,6 +425,7 @@ public class MainActivity extends ActionBarActivity
         mErrorIV.setVisibility(View.GONE);
         mErrorTV.setVisibility(View.GONE);
         mNavTV.setVisibility(View.GONE);
+        //If the app is currently grabbing data from the server, we don't want the option to refresh data.
         invalidateOptionsMenu();
     }
 

@@ -23,7 +23,7 @@ import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Displays detailed information about the radio station that is currently being played
  */
 public class StationDetailsFragment extends Fragment
         implements
@@ -225,6 +225,10 @@ public class StationDetailsFragment extends Fragment
         }
     }
 
+    /*
+     *  Will attempt to open an app that can handle the url being passed
+     *  @param url the url to open
+     */
     private void openUrl(String url) {
 
         Uri uri = Uri.parse(url);
@@ -232,6 +236,7 @@ public class StationDetailsFragment extends Fragment
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             startActivity(intent);
         }
+        //TODO tell the user that they don't have an app that can handle urls
 
     }
 

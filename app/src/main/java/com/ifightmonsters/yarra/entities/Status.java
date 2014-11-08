@@ -3,7 +3,10 @@ package com.ifightmonsters.yarra.entities;
 import java.util.List;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Data structure for representing a Status object that get returns back from the server
+ * Contains information about whether or not the radio station is online, the url to connect to
+ * stream music, the amount of listeners currently listening to the station, and the type of
+ * playlist is being played on the radio station.
  */
 public class Status {
 

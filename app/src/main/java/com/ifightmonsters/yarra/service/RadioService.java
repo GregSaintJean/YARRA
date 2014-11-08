@@ -399,7 +399,7 @@ public class RadioService extends Service
 
         syncInterval = syncInterval * ChronoUtils.MILLISECONDS_PER_SECOND;
 
-        if (ChronoUtils.isDateOldEnough(this, lastSyncDate, syncInterval)) {
+        if (ChronoUtils.isDateOldEnough(lastSyncDate, syncInterval)) {
             Log.d(LOG, "Data is old enough to get rid of, syncing...");
             mCurrentState = STATE_WAITING_FOR_SYNC_TO_FINISH;
             YarraSyncAdapter.syncImmediately(this);
