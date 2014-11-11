@@ -10,10 +10,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
@@ -34,7 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Sync adapter used to grab data from the Radio Reddit servers.
  */
 public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
@@ -61,8 +59,12 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
             ContentProviderClient provider,
             SyncResult syncResult) {
 
+        //Broadcasts telling the app that it's in the middle of retrieving data from the server
         mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_BEGIN));
 
+        /**
+         * Each station has it's own endpoint for grabbing information.
+         */
         LinkedList<BaseResponse> responses = new LinkedList<BaseResponse>();
         responses.add(RadioReddit.getMainStatus());
         responses.add(RadioReddit.getElectronicStatus());
@@ -74,6 +76,7 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
         responses.add(RadioReddit.getTalkStatus());
 
         try {
+            //We don't want to do anything fancy here, out with the old in with the new.
             purgeDatabases(provider);
             commitResponses(responses, provider);
             MainApp app = (MainApp) getContext().getApplicationContext();
@@ -82,9 +85,16 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
             Log.e(LOG, e.toString());
         }
 
+        //Broadcast to the app that the sync is completed
         mBroadMgr.sendBroadcast(new Intent(BROADCAST_SYNC_COMPLETED));
     }
 
+    /**
+     * purges the databases of all data stored.
+     *
+     * @param provider provider used to communicate with the databases
+     * @throws RemoteException
+     */
     private void purgeDatabases(ContentProviderClient provider) throws RemoteException {
         provider.delete(YarraContract.Song.CONTENT_URI, null, null);
         provider.delete(YarraContract.Status.CONTENT_URI, null, null);
@@ -101,6 +111,11 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
             Status status;
 
+            /*
+             * TalkResponses are responses that contain json about the talk streaming station.
+             * The json for the talk stream is structured a bit differently than the rest of the
+             * streams.
+             */
             if (response instanceof TalkResponse) {
                 status = ((TalkResponse) response).getStatus();
             } else {
@@ -116,6 +131,9 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
             Uri insertUri = provider.insert(YarraContract.Status.CONTENT_URI, statusValues);
 
+            /*
+             * TalkResponses don't have a list of songs to import.
+             */
             if (response instanceof StatusResponse) {
 
                 long statusId = ContentUris.parseId(insertUri);
@@ -153,6 +171,11 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
     }
 
+    /**
+     * Places an immediate request to sync data between the app and the servers
+     *
+     * @param ctx the context used to put in the sync request.
+     */
     public static void syncImmediately(Context ctx) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
@@ -161,24 +184,41 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
                 ctx.getString(R.string.content_authority), bundle);
     }
 
+    /**
+     * Sets up the sync adapter for syncing.
+     *
+     * @param ctx          context used for creating the sync request
+     * @param syncInterval how often the sync should happen in seconds
+     * @param flexTime     how much time between before and after the sync interval should the sync happen
+     */
     public static void configurePeriodicSync(Context ctx, int syncInterval, int flexTime) {
         Account account = getSyncAccount(ctx);
         String authority = ctx.getString(R.string.content_authority);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            SyncRequest request = new SyncRequest.Builder()
-                    .syncPeriodic(syncInterval, flexTime)
-                    .setSyncAdapter(account, authority).build();
-            ContentResolver.requestSync(request);
+
+        if (account == null) {
+            Log.d(LOG, "account is null");
         } else {
-            ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
+            Log.d(LOG, "accout is not null");
         }
+
+        Log.d(LOG, "sync internval: " + syncInterval);
+        Log.d(LOG, "flexTime: " + flexTime);
+        Log.d(LOG, "authority: " + authority);
+
+        ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
     }
 
     public static void removePeriodicSync(Context ctx) {
         ContentResolver.removePeriodicSync(getSyncAccount(ctx), ctx.getString(R.string.content_authority), new Bundle());
     }
 
+    /**
+     * This method is used for setting up the app for syncing once the dummy account has been created
+     *
+     * @param newAccount
+     * @param ctx
+     */
     private static void onAccountCreated(Account newAccount, Context ctx) {
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(ctx);
@@ -200,7 +240,13 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
         syncImmediately(ctx);
     }
 
-    public static Account getSyncAccount(Context ctx) {
+    /**
+     * Grab/create the dummy sync account for the sync adapter.
+     *
+     * @param ctx context used to create the dummy sync account
+     * @return dummy sync account
+     */
+    private static Account getSyncAccount(Context ctx) {
         AccountManager accountManager =
                 (AccountManager) ctx.getSystemService(Context.ACCOUNT_SERVICE);
 

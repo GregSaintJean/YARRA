@@ -34,6 +34,9 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
+        /**
+         * When the sync interval is changed, we want to update the syncadapter right away.
+         */
         if (key.equals(getString(R.string.pref_sync_interval))) {
 
             YarraSyncAdapter.removePeriodicSync(this);

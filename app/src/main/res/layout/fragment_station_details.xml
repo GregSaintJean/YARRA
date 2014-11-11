@@ -1,198 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:layout_width="match_parent"
     android:animateLayoutChanges="true"
+    android:background="@color/transparent_poster_bg"
     tools:context=".ui.fragment.StationDetailsFragment">
 
     <ImageView
         android:id="@+id/poster_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
         android:padding="0dp"
-        android:layout_margin="0dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/music_poster" />
+        android:scaleType="fitXY" />
 
-    <ProgressBar
-        android:id="@+id/progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
-
-    <RelativeLayout
+    <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-        android:background="#CCFFFFFF"
-        android:orientation="vertical">
+        android:layout_alignParentTop="true"
+        android:background="@color/transparent_poster_bg" />
 
-        <TextView
-            android:id="@+id/station_name_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentTop="true"
-            android:textColor="#660066"
-            android:layout_marginTop="30dp"
-            android:textSize="30sp"
-            android:text="Main" />
+    <ScrollView
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
 
-        <TextView
-            android:id="@+id/listener_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:textColor="#660066"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/station_name_tv"
-            android:text="Listeners: 200" />
-
-        <View
-            android:id="@+id/border_one"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@android:color/black"
-            android:layout_below="@id/listener_tv"
-            android:layout_marginBottom="15dp"
-            android:layout_marginTop="15dp" />
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent">
 
-        <TextView
-            android:id="@+id/now_playing_label"
-            android:layout_width="wrap_content"
-            android:textColor="#660066"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@id/border_one"
-            android:layout_marginLeft="15dp"
-            android:textSize="25sp"
-            android:text="Now Playing" />
-
-        <View
-            android:id="@+id/border_two"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_below="@id/now_playing_label"
-            android:background="@android:color/black"
-            android:layout_marginBottom="15dp"
-            android:layout_marginTop="15dp" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_below="@id/border_two"
-            android:orientation="vertical"
-            android:layout_marginRight="30dp"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/score_label_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:textColor="#660066"
-                android:layout_gravity="center_horizontal"
-                android:textSize="20sp"
-                android:text="Score" />
-
-            <TextView
-                android:id="@+id/score_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:textColor="#660066"
-                android:layout_gravity="center_horizontal"
-                android:textSize="15sp"
-                android:text="300" />
-
-            <ImageButton
-                android:id="@+id/reddit_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_launcher"
-                android:visibility="gone" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/song_tv"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@id/border_two"
-            android:layout_width="wrap_content"
-            android:textColor="#660066"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="15dp"
-            android:text="Song: Days Days Days" />
-
-        <TextView
-            android:id="@+id/artist_tv"
-            android:layout_width="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@id/song_tv"
-            android:layout_height="wrap_content"
-            android:textColor="#660066"
-            android:layout_marginTop="5dp"
-            android:layout_marginLeft="15dp"
-            android:text="Artist: Three Days Grace" />
-
-        <TextView
-            android:id="@+id/redditor_tv"
-            android:layout_alignParentLeft="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#660066"
-            android:layout_below="@id/artist_tv"
-            android:layout_marginTop="5dp"
-            android:layout_marginLeft="15dp"
-            android:text="Redditor: the_rabbit" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginBottom="5dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical|left"
-            android:layout_below="@id/redditor_tv">
-
-            <Button
-                android:id="@+id/preview_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:padding="0dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginLeft="5dp"
-                android:textColor="@color/station_details_btn_text_color"
-                android:background="@drawable/station_details_btn"
-                android:text="@string/btn_preview" />
+                android:layout_margin="0dp"
+                android:orientation="vertical">
 
-            <ImageButton
-                android:id="@+id/download_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:layout_marginLeft="5dp"
-                android:background="@drawable/station_details_circle_btn"
-                android:src="@drawable/ic_file_download" />
+                <TextView
+                    android:id="@+id/now_playing_label"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/station_details_item_text"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginTop="30dp"
+                    android:textSize="@dimen/station_details_now_playing_text_size"
+                    android:text="@string/now_playing" />
 
-        </LinearLayout>
+                <View
+                    android:id="@+id/border_two"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_below="@id/now_playing_label"
+                    android:background="@android:color/black"
+                    android:layout_marginBottom="15dp"
+                    android:layout_marginTop="15dp" />
 
-    </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@id/border_two"
+                    android:orientation="vertical"
+                    android:layout_marginRight="30dp"
+                    android:layout_marginTop="20dp">
+
+                    <TextView
+                        android:id="@+id/score_label_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:textColor="@color/station_details_item_text"
+                        android:layout_gravity="center_horizontal"
+                        android:textSize="@dimen/station_details_text_size"
+                        android:maxLength="@integer/max_station_list_text_length"
+                        android:maxLines="@integer/station_details_text_line_limit"
+                        android:text="@string/score" />
+
+                    <TextView
+                        android:id="@+id/score_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:textColor="@color/station_details_item_text"
+                        android:layout_gravity="center_horizontal"
+                        android:maxLength="@integer/max_station_list_text_length"
+                        android:maxLines="@integer/station_details_text_line_limit"
+                        android:textSize="@dimen/station_details_text_size"
+                        android:text="300" />
+
+                    <ImageButton
+                        android:id="@+id/reddit_url"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginRight="5dp"
+                        android:layout_gravity="center_horizontal"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/ic_launcher"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/song_tv"
+                    android:layout_alignParentLeft="true"
+                    android:layout_below="@id/border_two"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/station_details_item_text"
+                    android:layout_height="wrap_content"
+                    android:maxLength="@integer/max_station_list_text_length"
+                    android:maxLines="@integer/station_details_text_line_limit"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginLeft="25dp"
+                    android:textSize="@dimen/station_details_text_size" />
+
+                <TextView
+                    android:id="@+id/artist_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_below="@id/song_tv"
+                    android:layout_height="wrap_content"
+                    android:maxLength="@integer/max_station_list_text_length"
+                    android:maxLines="@integer/station_details_text_line_limit"
+                    android:textColor="@color/station_details_item_text"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginLeft="25dp"
+                    android:textSize="@dimen/station_details_text_size" />
+
+                <TextView
+                    android:id="@+id/redditor_tv"
+                    android:layout_alignParentLeft="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/clickable_text"
+                    android:layout_below="@id/artist_tv"
+                    android:layout_marginTop="5dp"
+                    android:maxLength="@integer/max_station_list_text_length"
+                    android:maxLines="@integer/station_details_text_line_limit"
+                    android:layout_marginLeft="25dp"
+                    android:textSize="@dimen/station_details_text_size" />
+
+                <ImageButton
+                    android:id="@+id/download_url"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginLeft="30dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_below="@id/redditor_tv"
+                    android:background="@drawable/station_details_circle_btn"
+                    android:src="@drawable/ic_file_download" />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </ScrollView>
 
 </RelativeLayout>

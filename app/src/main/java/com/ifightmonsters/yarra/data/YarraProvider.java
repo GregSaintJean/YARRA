@@ -52,7 +52,7 @@ public class YarraProvider extends ContentProvider {
     private Cursor getStatusById(Uri uri, String[] projection, String sortOrder) {
         return sStatusIdQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
-                YarraContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
+                YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID + " = '" + ContentUris.parseId(uri) + "'",
                 null,
                 null,
                 null,

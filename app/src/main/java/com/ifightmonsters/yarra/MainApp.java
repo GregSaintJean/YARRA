@@ -2,7 +2,6 @@ package com.ifightmonsters.yarra;
 
 import android.app.Application;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
@@ -50,14 +49,6 @@ public class MainApp extends Application {
         String storageDate = ChronoUtils.getStorageFormattedDate(currentDate);
         editor.putString(getString(R.string.sync_timestamp), storageDate);
         editor.commit();
-    }
-
-    public final boolean isTwoPane() {
-        return getResources().getBoolean(R.bool.is_two_pane);
-    }
-
-    public final boolean isLandscape() {
-        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
 }

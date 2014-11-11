@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,6 +15,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.CursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,25 +28,37 @@ import android.widget.TextView;
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
 import com.ifightmonsters.yarra.service.RadioService;
-import com.ifightmonsters.yarra.ui.activity.OnFragmentInteractionListener;
+import com.ifightmonsters.yarra.ui.activity.MainActivity;
+import com.ifightmonsters.yarra.utils.AndroidUtils;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Fragment responsible for displaying a list of radio stations that the user can playback
  */
 public class MainFragment extends Fragment
         implements
         LoaderManager.LoaderCallbacks<Cursor>,
         AdapterView.OnItemClickListener {
 
-    private String statusSortOrder = YarraContract.Status._ID + " ASC";
+    private static final String LOG = "MainFragment";
 
-    private int mCurrentSelection = -1;
+    private static final String EXTRA_CURRENT_SELECTION = "current_selection";
 
+    /**
+     * We only want the station id, playlist and number of listeners. The station id
+     * we use to communicate with the activity. The playlist and the number of listeners, we display
+     * to the user.
+     */
     private static final String[] STATUS_PROJECTION = {
             YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID,
             YarraContract.Status.COLUMN_PLAYLIST,
             YarraContract.Status.COLUMN_LISTENERS
     };
+    private static final String LIST_SELECTION_KEY = "list_selection";
+    private String statusSortOrder = YarraContract.Status._ID + " ASC";
+
+    private int STATUS_LOADER = 0;
+
+    private int mCurrentSelection;
 
     private LocalBroadcastManager mLocalMgr;
 
@@ -67,21 +79,26 @@ public class MainFragment extends Fragment
             if (action.equals(RadioService.BROADCAST_KILLED)) {
                 if (mListView != null) {
                     mListView.setItemChecked(mCurrentSelection, false);
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                    mGridView.setItemChecked(mCurrentSelection, false);
+                } else {
+                    if (AndroidUtils.equalOrGreaterThanHoneycomb()) {
+                        mGridView.setItemChecked(mCurrentSelection, false);
+                    } else {
+                        mGridView.setSelection(-1);
+                    }
                 }
+
+                mCurrentSelection = -1;
             }
 
         }
     };
 
-    private int STATUS_LOADER = 0;
-
-    private OnFragmentInteractionListener mListener;
+    private MainActivity mActivity;
     private ListView mListView;
     private GridView mGridView;
     private CursorAdapter mAdapter;
     private Cursor mCursor;
+    private TextView mErrorTV;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -90,36 +107,61 @@ public class MainFragment extends Fragment
     public MainFragment() {
     }
 
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        /**
+         * We want the fragment to remember the listview/gridview position. The gridview and listview position are
+         * identical.
+         */
+        if (savedInstanceState != null && !savedInstanceState.isEmpty()) {
+            if (savedInstanceState.containsKey(LIST_SELECTION_KEY)) {
+                mCurrentSelection = savedInstanceState.getInt(LIST_SELECTION_KEY);
+            }
+
+        }
+
         getLoaderManager().initLoader(STATUS_LOADER, null, this);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mListener = (OnFragmentInteractionListener) activity;
+        mActivity = (MainActivity) activity;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        mActivity = null;
     }
 
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocalMgr = LocalBroadcastManager.getInstance(getActivity());
+
+        Bundle args = getArguments();
+
+        if (args != null && !args.isEmpty()) {
+            if (args.containsKey(EXTRA_CURRENT_SELECTION)) {
+                mCurrentSelection = args.getInt(EXTRA_CURRENT_SELECTION);
+            }
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View v = inflater.inflate(R.layout.fragment_main, container, false);
+
+        mErrorTV = (TextView) v.findViewById(R.id.error_tv);
+
         mAdapter = new StationCursorAdapter(getActivity(), null, false);
         View lister = v.findViewById(R.id.list);
 
@@ -132,10 +174,25 @@ public class MainFragment extends Fragment
             mListView.setAdapter(mAdapter);
             mListView.setOnItemClickListener(this);
         }
+
         return v;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+
+        if (mListView != null) {
+            outState.putInt(LIST_SELECTION_KEY, mCurrentSelection);
+        } else {
+            outState.putInt(LIST_SELECTION_KEY, mCurrentSelection);
+        }
+
+        super.onSaveInstanceState(outState);
+    }
+
     private void registerReceivers() {
+        //We want unselect the listview/gridview selection when the station is killed.
         IntentFilter internalFilter = new IntentFilter(RadioService.BROADCAST_KILLED);
         mLocalMgr.registerReceiver(mMainFragmentReceiver, internalFilter);
     }
@@ -148,6 +205,27 @@ public class MainFragment extends Fragment
     public void onStart() {
         super.onStart();
         registerReceivers();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        attemptToRestoreListViews();
+    }
+
+    @SuppressWarnings("NewApi")
+    private void attemptToRestoreListViews() {
+
+        if (mListView != null) {
+            mListView.setSelection(mCurrentSelection);
+            mListView.setItemChecked(mCurrentSelection, true);
+        } else {
+            if (AndroidUtils.equalOrGreaterThanHoneycomb()) {
+                mGridView.setItemChecked(mCurrentSelection, true);
+            } else {
+                mGridView.setSelection(mCurrentSelection);
+            }
+        }
     }
 
     @Override
@@ -170,7 +248,16 @@ public class MainFragment extends Fragment
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoaderLoader, Cursor cursor) {
         mCursor = cursor;
-        mAdapter.swapCursor(mCursor);
+
+        if (mCursor != null && mCursor.getCount() > 0) {
+            showErrorMessage(false);
+            mAdapter.swapCursor(mCursor);
+        } else {
+            showErrorMessage(true);
+            setErrorMessage(R.string.error_no_station_data);
+        }
+
+
     }
 
     @Override
@@ -189,14 +276,18 @@ public class MainFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if (mCursor.moveToPosition(position)) {
+            //We communicate with the activity the database id of the radio station
             long statusId =
-                    mCursor.getLong(mCursor.getColumnIndex(
-                            YarraContract.Status.TABLE_NAME + "." + YarraContract.Status._ID));
-            mListener.onFragmentInteraction(YarraContract.Status.buildStatusUri(statusId));
+                    mCursor.getLong(mCursor.getColumnIndex(YarraContract.Status._ID));
+            mActivity.onFragmentInteraction(YarraContract.Status.buildStatusUri(statusId));
             mCurrentSelection = position;
         }
 
     }
+
+    /**
+     * Adapter used in the listview/gridview to display information about the different radio stations
+     */
 
     public class StationCursorAdapter extends CursorAdapter {
 
@@ -227,10 +318,51 @@ public class MainFragment extends Fragment
 
             station_name = (station_name.charAt(0) + "").toUpperCase() + station_name.substring(1);
 
-            ((TextView) view.findViewById(R.id.station_name)).setText(station_name);
+            ((TextView) view.findViewById(R.id.station_name)).setText(String.format(getString(R.string.station), station_name));
             ((TextView) view.findViewById(R.id.listeners_tv)).setText(listeners);
 
         }
+    }
+
+    /**
+     * Displays the appropriate error message. We have it take in a string resource so that in the future
+     * if we want to add more error message, we just have to pass a string resource id.
+     *
+     * @param stringRes the string resource id of the message we wish to display
+     */
+    private void setErrorMessage(int stringRes) {
+        mErrorTV.setText(stringRes);
+    }
+
+    /**
+     * Determines whether or not an error message or the listview/gridview should be displayed on the fragment
+     *
+     * @param show whether or not an error message or a listview/gridview should be displayed
+     */
+    private void showErrorMessage(boolean show) {
+
+        if (show) {
+
+            if (mListView != null) {
+                mListView.setVisibility(View.GONE);
+            } else {
+                mGridView.setVisibility(View.GONE);
+            }
+
+            mErrorTV.setVisibility(View.VISIBLE);
+
+        } else {
+
+            if (mListView != null) {
+                mListView.setVisibility(View.VISIBLE);
+            } else {
+                mGridView.setVisibility(View.VISIBLE);
+            }
+
+            mErrorTV.setVisibility(View.GONE);
+
+        }
+
     }
 
 }

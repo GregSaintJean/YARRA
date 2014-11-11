@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.0"
+    buildToolsVersion "21.0.2"
 
     defaultConfig {
         applicationId "com.ifightmonsters.yarra"
@@ -26,5 +26,4 @@ dependencies {
     compile 'com.google.code.gson:gson:2.+'
     compile 'com.squareup.okhttp:okhttp:2.0.+'
     compile 'com.squareup.okio:okio:1.0.+'
-    compile 'com.github.japgolly.android:svg-android:2.0.6'
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="station_details_title_text_size">40sp</dimen>
+    <dimen name="station_details_now_playing_text_size">30sp</dimen>
+    <dimen name="station_details_text_size">25sp</dimen>
+</resources>

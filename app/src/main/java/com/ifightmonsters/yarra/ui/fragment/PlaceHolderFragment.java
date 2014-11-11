@@ -10,15 +10,15 @@ import android.view.ViewGroup;
 import com.ifightmonsters.yarra.R;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * Fragment to be placed when no station is selected.
  */
 public class PlaceHolderFragment extends Fragment {
 
-    public static PlaceHolderFragment newInstance(){
+    public static PlaceHolderFragment newInstance() {
         return new PlaceHolderFragment();
     }
 
-    public PlaceHolderFragment (){
+    public PlaceHolderFragment() {
 
     }
 

@@ -37,6 +37,11 @@ import com.ifightmonsters.yarra.utils.NetworkUtils;
 import java.io.IOException;
 import java.util.Date;
 
+
+/**
+ * Radio service responsible for playing back music from the radio reddit streaming
+ * servers.
+ */
 public class RadioService extends Service
         implements
         MediaPlayer.OnCompletionListener,
@@ -189,7 +194,6 @@ public class RadioService extends Service
         Bundle extras = intent.getExtras();
 
         if (TextUtils.isEmpty(action)) {
-            Log.d(LOG, "Empty intent");
             handleEmptyIntent();
             try {
                 return Service.START_NOT_STICKY;
@@ -199,17 +203,14 @@ public class RadioService extends Service
         }
 
         if (action.equals(ACTION_PLAY)) {
-            Log.d(LOG, "Received play action");
             if (extras != null && extras.containsKey(EXTRA_STATION_ID)) {
                 handlePlayAction(extras.getLong(EXTRA_STATION_ID));
             } else {
                 stopSelf();
             }
         } else if (action.equals(ACTION_STOP)) {
-            Log.d(LOG, "Received stop action");
             handleStopAction();
         } else if (action.equals(ACTION_SYNC)) {
-            Log.d(LOG, "Received sync action");
             handleSyncAction();
         }
 
@@ -218,13 +219,11 @@ public class RadioService extends Service
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        Log.d(LOG, "onCompletion called");
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         mCurrentState = STATE_ERROR;
-        Log.d(LOG, "onError called. what= " + String.valueOf(what) + " extra= " + String.valueOf(extra));
 
         switch (what) {
             case MediaPlayer.MEDIA_ERROR_UNKNOWN:
@@ -260,12 +259,10 @@ public class RadioService extends Service
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        Log.d(LOG, "onPrepared called");
 
         if (mCurrentState == STATE_IDLE
                 || mCurrentState == STATE_ERROR
                 || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
-            Log.d(LOG, "RadioService not in correct state. returning....");
             mCurrentState = STATE_ERROR;
             return;
         }
@@ -348,7 +345,6 @@ public class RadioService extends Service
 
     private void setupMediaPlayer() {
         //TODO Maybe it's best to check what state everything is in
-        Log.d(LOG, "setupMediaPlayer called");
         if (mPlayer == null) {
             mPlayer = new MediaPlayer();
             mPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
@@ -364,7 +360,6 @@ public class RadioService extends Service
     }
 
     private void prepStreamPlayback() {
-        Log.d(LOG, "prepStreamPlayback called");
         if (mCurrentState == STATE_PREPARING
                 || mCurrentState == STATE_PLAYING
                 || mCurrentState == STATE_WAITING_FOR_SYNC_TO_FINISH) {
@@ -384,7 +379,6 @@ public class RadioService extends Service
     }
 
     private void retrievePlaybackData() {
-        Log.d(LOG, "retrievePlaybackData called");
 
         MainApp app = (MainApp) getApplicationContext();
 
@@ -400,19 +394,15 @@ public class RadioService extends Service
         syncInterval = syncInterval * ChronoUtils.MILLISECONDS_PER_SECOND;
 
         if (ChronoUtils.isDateOldEnough(lastSyncDate, syncInterval)) {
-            Log.d(LOG, "Data is old enough to get rid of, syncing...");
             mCurrentState = STATE_WAITING_FOR_SYNC_TO_FINISH;
             YarraSyncAdapter.syncImmediately(this);
         } else {
-            Log.d(LOG, "Data is not old enough, attempting playback");
             attemptPlayback();
         }
 
     }
 
     private void attemptPlayback() {
-
-        Log.d(LOG, "attemptPlayback called");
 
         mCurrentState = STATE_PREPARING;
 
@@ -452,7 +442,7 @@ public class RadioService extends Service
 
             } else {
                 mCurrentState = STATE_ERROR;
-                Log.d(LOG, "No data from cursor came back");
+                Log.e(LOG, "No data from cursor came back");
                 broadcastError(R.string.error_no_station_data);
                 releaseMediaPlayer(true);
                 stopSelf();
@@ -473,7 +463,6 @@ public class RadioService extends Service
     }
 
     private void stopPlayer() {
-        Log.d(LOG, "stopPlayer called");
         mCurrentState = STATE_STOPPED;
         mPlayer.stop();
         releaseMediaPlayer(false);
@@ -482,7 +471,6 @@ public class RadioService extends Service
     }
 
     private void killService() {
-        Log.d(LOG, "killService called");
         if (mCurrentState == STATE_ERROR
                 || mCurrentState == STATE_STOPPED
                 || mCurrentState == STATE_IDLE) {
@@ -525,7 +513,6 @@ public class RadioService extends Service
     }
 
     private void releaseMediaPlayer(boolean type) {
-        Log.d(LOG, "releaseMediaPlayer called");
         //TODO implement the resetting of state variables maybe
         mPlayer.reset();
         if (type) {
@@ -538,7 +525,6 @@ public class RadioService extends Service
     }
 
     private void handleEmptyIntent() {
-        Log.d(LOG, "handleEmptyAction called");
         broadcastError(R.string.error_empty_intent);
     }
 
@@ -575,7 +561,6 @@ public class RadioService extends Service
     }
 
     private void handleStopAction() {
-        Log.d(LOG, "handleStopAction called");
         if (mCurrentState == STATE_STOPPED || mCurrentState == STATE_IDLE) {
             return;
         }

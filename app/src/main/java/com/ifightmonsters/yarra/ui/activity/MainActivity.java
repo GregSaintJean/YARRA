@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 import com.ifightmonsters.yarra.ui.fragment.MainFragment;
 import com.ifightmonsters.yarra.ui.fragment.PlaceHolderFragment;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
+import com.ifightmonsters.yarra.utils.AndroidUtils;
 import com.ifightmonsters.yarra.utils.NetworkUtils;
 
 /**
@@ -41,6 +43,10 @@ public class MainActivity extends ActionBarActivity
         OnFragmentInteractionListener {
 
     private static final String FRAGMENT_PLACEHOLDER = "fragment_placeholder";
+    private static final String CURRENT_STATION_KEY = "current_station_key";
+    private static final String BRING_ACTIVITY_BACK_KEY = "bring_activity_back_key";
+
+    private static final int REQUEST_CODE_STATION_DETAILS = 1;
 
     private long mCurrentStation = -1;
 
@@ -54,7 +60,10 @@ public class MainActivity extends ActionBarActivity
      */
     private boolean mSyncing = false;
 
-    //For registering broadcast receivers.
+    private boolean mBringUpFragment = false;
+    private boolean mBringUpActivity = false;
+
+    //For listening to broadcasts within the app
     private LocalBroadcastManager mLocalBroadcastMgr;
 
     private ImageView mErrorIV;
@@ -77,6 +86,10 @@ public class MainActivity extends ActionBarActivity
                 return;
             }
 
+            /**
+             * Whatever error messages come back from the radio service,
+             * we wish to display on the screen.
+             */
             if (action.equals(RadioService.BROADCAST_ERROR)) {
                 Bundle extras = intent.getExtras();
 
@@ -86,35 +99,60 @@ public class MainActivity extends ActionBarActivity
 
                 int error = extras.getInt(RadioService.EXTRA_ERROR);
 
-                Toast.makeText(MainActivity.this,
-                        error, Toast.LENGTH_SHORT).show();
+                if (error != 0) {
+                    Toast.makeText(MainActivity.this,
+                            error, Toast.LENGTH_SHORT).show();
+                }
             }
 
+            /**
+             * We want to update the title bar with the appropriate status from the radio service
+             */
             if (action.equals(RadioService.BROADCAST_STATUS)) {
                 Bundle extras = intent.getExtras();
 
                 if (extras == null || !extras.containsKey(RadioService.EXTRA_STATUS)) {
-                    //TODO Change to set the default title
+                    setActionBarTitle(R.string.app_name);
                     displayUnknownErrorToast();
                 }
 
                 int message = extras.getInt(RadioService.EXTRA_STATUS);
-                setActionBarTitle(message);
+                if (message != 0) {
+                    setActionBarTitle(message);
+                }
             }
 
+            /**
+             * When the radio service is killed, we want to reset the position
+             * on the listview/gridview
+             */
             if (action.equals(RadioService.BROADCAST_KILLED)) {
                 placePlaceHolderFragment();
+                mCurrentStation = -1;
+                setActionBarTitle(R.string.app_name);
             }
 
+            /**
+             * If the network connectivity status has changed, we want to disable the ability to
+             * sync with the servers since attempting to sync might cause a crash. We also want to display
+             * the correct error message and a possible option on how to regain network connectivity.
+             */
             if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
                 checkNetworkConnectivity();
             }
 
+            /**
+             * When the network is syncing, we want to disable the ability to send further request to sync
+             * with the servers.
+             */
             if (action.equals(YarraSyncAdapter.BROADCAST_SYNC_BEGIN)) {
                 showSyncing(true);
                 mSyncing = true;
             }
 
+            /**
+             * When the syncing is complete, we want to reenabled the ability to sync with the servers.
+             */
             if (action.equals(YarraSyncAdapter.BROADCAST_SYNC_COMPLETED)) {
                 showSyncing(false);
                 mSyncing = false;
@@ -122,6 +160,9 @@ public class MainActivity extends ActionBarActivity
         }
     };
 
+    /**
+     * In case the radio service broadcasts an error state but with no error message.
+     */
     private void displayUnknownErrorToast() {
         Toast.makeText(
                 this, R.string.error_unknown, Toast.LENGTH_SHORT).show();
@@ -154,8 +195,12 @@ public class MainActivity extends ActionBarActivity
             mStationDetailsContainer = findViewById(R.id.station_details_container);
         }
 
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null || savedInstanceState.isEmpty()) {
 
+            /**
+             * We want to set a default state for the app if the app just came on or restored and
+             * there is nothing streaming.
+             */
             Fragment mainFragment = MainFragment.newInstance();
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.station_container, mainFragment).commit();
@@ -172,7 +217,41 @@ public class MainActivity extends ActionBarActivity
                         .add(R.id.station_details_container,
                                 placeHolderFragment, FRAGMENT_PLACEHOLDER).commit();
             }
+        } else {
+
+            if (savedInstanceState.containsKey(CURRENT_STATION_KEY)) {
+                mCurrentStation = savedInstanceState.getLong(CURRENT_STATION_KEY);
+            }
+
+            if (savedInstanceState.containsKey(BRING_ACTIVITY_BACK_KEY)) {
+                mBringUpActivity = savedInstanceState.getBoolean(BRING_ACTIVITY_BACK_KEY);
+            }
+
         }
+
+        /*
+         * onCreate is called when a configuration change is made. We want to handle the configuration
+         * change here because of this instead of overriding onConfigurationChanged. onConfigurationChanged
+         * is called only when the activity has the attribute android:configChanges in the AndroidManifest.
+         * However, when the attribute is used, you have to programmatically handle the changes yourself.
+         * In order to avoid a custom unoptimized implementation of orientation changes, I wrote this code
+         * here in onCreate instead.
+         */
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
+                && AndroidUtils.isTwoPane(this)
+                && mCurrentStation != -1
+                && mBringUpActivity) {
+            placePlaceHolderFragment();
+            startStationDetailsActivity(mCurrentStation);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putLong(CURRENT_STATION_KEY, mCurrentStation);
+        outState.putBoolean(BRING_ACTIVITY_BACK_KEY, mBringUpActivity);
+        super.onSaveInstanceState(outState);
     }
 
     private void setActionBarTitle(int stringRes) {
@@ -213,14 +292,14 @@ public class MainActivity extends ActionBarActivity
     /**
      * Responsible for launching the wifi settings screen for the device.
      */
-    public void launchWifiSettingsActivity() {
+    private void launchWifiSettingsActivity() {
         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
     }
 
     /**
      * Responsible for launching the settings screen within the app.
      */
-    public void launchSettingsActivity() {
+    private void launchSettingsActivity() {
         startActivity(new Intent(this, SettingsActivity.class));
     }
 
@@ -231,7 +310,22 @@ public class MainActivity extends ActionBarActivity
          * require the UI to change based on the situation
          */
         registerReceivers();
+        /*
+         * When the activity is bought back into view, a check must be done to see if there
+         * is network connectivity to determine whether or not the user should be able to play
+         * a station.
+         */
         checkNetworkConnectivity();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mBringUpFragment) {
+            displayAppropriateFragment(mCurrentStation);
+            mBringUpFragment = false;
+        }
     }
 
     @Override
@@ -288,7 +382,6 @@ public class MainActivity extends ActionBarActivity
      * Responsible for setting back a default transparent fragment into view when no music
      * is playing
      */
-
     private void placePlaceHolderFragment() {
         if (mStationDetailsContainer != null) {
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
@@ -298,6 +391,7 @@ public class MainActivity extends ActionBarActivity
             }
             trans.replace(R.id.station_details_container, nextFragment, FRAGMENT_PLACEHOLDER);
             trans.commit();
+            mBringUpActivity = false;
         }
     }
 
@@ -322,28 +416,96 @@ public class MainActivity extends ActionBarActivity
 
     }
 
-    public void handleStationPlayback(long id) {
+    /**
+     * Attempts to start or stop music playback from RadioService. This should only be done if
+     * data is available in the database from servers containing relay urls and there is network
+     * connectivity. It will also attempt to either launch an activity or show a fragment
+     * displaying detailed information about the radio station.
+     *
+     * @param id primary key of radio station in database
+     */
+    private void handleStationPlayback(long id) {
+
+        /**
+         * If another request is made to the same station after the station is already playing,
+         * this is an indication that the user wishes to stop playback. So here, we stop playback.
+         */
         if (mCurrentStation == id && RadioService.isPlaying()) {
             RadioService.stop(this);
+            mBringUpActivity = false;
+            mCurrentStation = -1;
             return;
         }
 
+        /**
+         * When the user requests playback we want to display the appropriate fragment or activity
+         * that gives detailed information about the station playing.
+         */
         RadioService.play(this, id);
-        handleFragments(mCurrentStation);
+        handlingDetailedRadioStationInformation(id);
         mCurrentStation = id;
     }
 
-    public void handleFragments(long id) {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_STATION_DETAILS) {
+
+            /**
+             * We use this to bring up the correct fragment if the user rotates the screen and the device
+             * supports a two-pane layout. We call startActivityForResult to bring up the activity but
+             * if the user rotates the screen, it comes out of the activity and displays the second pane
+             * with the same information as what is displayed in StationDetailsActivity. We setResult on rotation
+             * and pass a long which represents the radio station in the database. We use the long to restore
+             * the data in the second pane.
+             */
+
+            if (data != null
+                    && data.getExtras() != null
+                    && !data.getExtras().isEmpty()) {
+
+                Bundle extras = data.getExtras();
+                if (extras.containsKey(StationDetailsActivity.EXTRA_STATION_ID)) {
+                    mCurrentStation = extras.getLong(StationDetailsActivity.EXTRA_STATION_ID);
+                    mBringUpFragment = true;
+                } else {
+                    mBringUpActivity = false;
+                }
+            }
+
+        }
+    }
+
+    /**
+     * Attempts to either launch an activity or show a fragment displaying detailed information
+     * about the station that is being played.
+     *
+     * @param id primary key of radio station in database
+     */
+    private void handlingDetailedRadioStationInformation(long id) {
 
         if (id != mCurrentStation) {
+
             if (mStationDetailsContainer != null) {
-                FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
-                trans.replace(R.id.station_details_container, StationDetailsFragment.newInstance(id));
-                trans.commit();
+                displayAppropriateFragment(id);
             } else {
                 startStationDetailsActivity(id);
             }
         }
+    }
+
+    /**
+     * Displays a fragment on a device that supports a two pane view in landscape orientation
+     * containing detailed information about the station being played
+     *
+     * @param id primary key of radio station in database
+     */
+    private void displayAppropriateFragment(long id) {
+        FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
+        trans.replace(R.id.station_details_container, StationDetailsFragment.newInstance(id));
+        trans.commit();
+        mBringUpActivity = true;
     }
 
     /**
@@ -354,7 +516,7 @@ public class MainActivity extends ActionBarActivity
     private void startStationDetailsActivity(long id) {
         Intent intent = new Intent(this, StationDetailsActivity.class);
         intent.putExtra(StationDetailsFragment.EXTRA_STATION_ID, id);
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_CODE_STATION_DETAILS);
     }
 
     /**

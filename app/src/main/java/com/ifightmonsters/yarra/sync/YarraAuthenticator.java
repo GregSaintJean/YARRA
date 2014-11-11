@@ -8,7 +8,8 @@ import android.content.Context;
 import android.os.Bundle;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * A stub authenticator for the sync adapter. Nothing is implemented is not really used except
+ * as a placeholder to satisfy a requirement.
  */
 public class YarraAuthenticator extends AbstractAccountAuthenticator {
 

@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 /**
- * Created by Gregory on 10/31/2014.
+ * An authenticator service for the stub authenticator used for the sync adapter.
  */
 public class YarraAuthenticatorService extends Service {
 

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:color="@color/station_details_item_text_pressed" android:state_pressed="true" />
-    <item android:color="@color/station_details_item_text" />
-
-</selector>

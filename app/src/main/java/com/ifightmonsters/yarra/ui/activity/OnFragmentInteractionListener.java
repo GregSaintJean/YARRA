@@ -8,6 +8,11 @@ import android.net.Uri;
  */
 public interface OnFragmentInteractionListener {
 
+    /**
+     * Called when communication needs to be done between fragment and activity.
+     *
+     * @param uri uri delivering the action the fragment is requesting to be done from the activity.
+     */
     public void onFragmentInteraction(Uri uri);
 
 }

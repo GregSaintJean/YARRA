@@ -17,9 +17,10 @@
         android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="?attr/actionBarSize"
-        android:horizontalSpacing="10dp"
-        android:verticalSpacing="10dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:horizontalSpacing="@dimen/station_list_dividers_spacing"
+        android:verticalSpacing="@dimen/station_list_dividers_spacing"
         android:choiceMode="singleChoice"
         android:stretchMode="columnWidth"
         android:numColumns="2" />

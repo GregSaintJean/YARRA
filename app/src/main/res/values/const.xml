@@ -4,6 +4,8 @@
     <string name="first_launch" translatable="false">first_launch</string>
     <string name="sync_timestamp" translatable="false">sync_timestamp</string>
     <bool name="is_two_pane">false</bool>
+    <integer name="station_details_text_limit">14</integer>
+    <integer name="station_details_text_line_limit">1</integer>
 
     <string name="pref_sync_interval" translatable="false">sync_interval</string>
 

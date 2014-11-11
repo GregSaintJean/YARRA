@@ -19,8 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="5dp"
-        android:horizontalSpacing="10dp"
-        android:verticalSpacing="10dp"
+        android:horizontalSpacing="@dimen/station_list_dividers_spacing"
+        android:verticalSpacing="@dimen/station_list_dividers_spacing"
         android:choiceMode="singleChoice"
         android:stretchMode="columnWidth"
         android:numColumns="2" />

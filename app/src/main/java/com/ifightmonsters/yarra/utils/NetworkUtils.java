@@ -9,20 +9,27 @@ import android.net.NetworkInfo;
  */
 public final class NetworkUtils {
 
-    public static boolean hasNetworkConnectivity(Context ctx){
+    /**
+     * Checks whether or not there is network connectivity on the device.
+     *
+     * @param ctx the context used to request the network check
+     * @return whether or not the device has network connectivity.
+     */
+    public static boolean hasNetworkConnectivity(Context ctx) {
 
-        if(ctx == null){
+        if (ctx == null) {
             return false;
         }
 
         ConnectivityManager connMgr =
-                (ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         return networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected();
     }
 
-    private NetworkUtils(){}
+    private NetworkUtils() {
+    }
 
 }

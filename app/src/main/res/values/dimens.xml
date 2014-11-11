@@ -4,5 +4,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="station_list_dividers_height">5dp</dimen>
+    <dimen name="station_list_dividers_spacing">10dp</dimen>
+    <dimen name="station_details_title_text_size">30sp</dimen>
+    <dimen name="station_details_now_playing_text_size">20sp</dimen>
+    <dimen name="station_details_text_size">15sp</dimen>
 </resources>
