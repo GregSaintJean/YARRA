@@ -1,2 +1,2 @@
-YARRA (Yet another reddit app)
+YARRA (Yet another radio reddit app)
 =====
