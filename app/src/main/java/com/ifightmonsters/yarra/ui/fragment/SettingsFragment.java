@@ -1,33 +1,34 @@
-package com.ifightmonsters.yarra.ui.activity;
+package com.ifightmonsters.yarra.ui.fragment;
 
+import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.sync.YarraSyncAdapter;
 
 /**
- * Screen responsible for giving the different setting options available for the app
+ * Created by Gregory on 11/19/2014.
  */
-public class SettingsActivity extends PreferenceActivity
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
-
+@TargetApi(11)
+public class SettingsFragment extends PreferenceFragment
+        implements SharedPreferences.OnSharedPreferenceChangeListener{
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.pref_general);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    public void onPause() {
+        super.onPause();
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    public void onResume() {
+        super.onResume();
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
     }
 
@@ -39,14 +40,14 @@ public class SettingsActivity extends PreferenceActivity
          */
         if (key.equals(getString(R.string.pref_sync_interval))) {
 
-            YarraSyncAdapter.removePeriodicSync(this);
+            YarraSyncAdapter.removePeriodicSync(getActivity());
 
             int sync_interval = Integer.valueOf(sharedPreferences.getString(getString(R.string.pref_sync_interval),
                     Integer.toString(getResources().getInteger(R.integer.default_sync_interval))));
 
             int flex_time = getResources().getInteger(R.integer.default_flextime_interval);
 
-            YarraSyncAdapter.configurePeriodicSync(this, sync_interval, flex_time);
+            YarraSyncAdapter.configurePeriodicSync(getActivity(), sync_interval, flex_time);
 
         }
 

@@ -1,5 +1,6 @@
 package com.ifightmonsters.yarra.ui.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.Cursor;
@@ -11,14 +12,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.ArrayMap;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.ShareActionProvider;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -28,6 +23,7 @@ import android.widget.Toast;
 
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.data.YarraContract;
+import com.ifightmonsters.yarra.ui.activity.StationDetailsActivity;
 
 /**
  * Displays detailed information about the radio station that is currently being played
@@ -74,14 +70,26 @@ public class StationDetailsFragment extends Fragment
 
     }
 
+    private StationDetailsActivity mActivity;
     private ImageView mPosterContainer;
     private TextView mSongName, mArtistName, mScore, mRedditor;
     private ImageButton mRedditUrlBtn, mDownloadUrlBtn;
-    private ShareActionProvider mShareActionProvider;
 
     private long mStationId;
     private String mDownloadUrl, mRedditUrl, mRedditorUrl;
     private Cursor mCursor;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mActivity = (StationDetailsActivity) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mActivity = null;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -114,29 +122,6 @@ public class StationDetailsFragment extends Fragment
         mDownloadUrlBtn.setOnClickListener(this);
         mRedditor.setOnClickListener(this);
         return root;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.station_details_menu, menu);
-        MenuItem shareItem = menu.findItem(R.id.action_share);
-        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-
-        MenuItem shareItem = menu.findItem(R.id.action_share);
-
-        if (mDownloadUrl != null) {
-            shareItem.setVisible(true);
-            mShareActionProvider.setShareIntent(shareUrl(mDownloadUrl));
-        } else {
-            shareItem.setVisible(false);
-        }
-
     }
 
     @Override
@@ -197,6 +182,7 @@ public class StationDetailsFragment extends Fragment
                 if (!TextUtils.isEmpty(downloadUrl)) {
                     mDownloadUrl = downloadUrl;
                     mDownloadUrlBtn.setVisibility(View.VISIBLE);
+                    mActivity.setDownloadUrl(mDownloadUrl);
                 } else {
                     mDownloadUrlBtn.setVisibility(View.GONE);
                 }
@@ -204,8 +190,6 @@ public class StationDetailsFragment extends Fragment
             }
 
         }
-
-        ((ActionBarActivity) getActivity()).invalidateOptionsMenu();
 
     }
 
@@ -252,13 +236,6 @@ public class StationDetailsFragment extends Fragment
             Toast.makeText(getActivity(), getString(R.string.error_no_http_url_app), Toast.LENGTH_SHORT).show();
         }
 
-    }
-
-    private Intent shareUrl(String url) {
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-        shareIntent.setType("text/plain");
-        return shareIntent;
     }
 
     /**

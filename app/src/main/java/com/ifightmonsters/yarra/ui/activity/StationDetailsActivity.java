@@ -3,7 +3,12 @@ package com.ifightmonsters.yarra.ui.activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.ifightmonsters.yarra.R;
 import com.ifightmonsters.yarra.ui.fragment.StationDetailsFragment;
@@ -17,6 +22,11 @@ public class StationDetailsActivity extends ActionBarActivity {
 
     private static final String EXTRA = "com.ifightmonsters.yarra.ui.activity.EXTRA";
     public static final String EXTRA_STATION_ID = EXTRA + ".STATION_ID";
+
+    private StationDetailsFragment mFragment;
+    private ShareActionProvider mShareActionProvider;
+    private String mDownloadUrl;
+
 
     private long mStationId;
 
@@ -34,6 +44,8 @@ public class StationDetailsActivity extends ActionBarActivity {
             return;
         }
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mStationId = args.getLong(StationDetailsFragment.EXTRA_STATION_ID);
 
         /*
@@ -50,11 +62,59 @@ public class StationDetailsActivity extends ActionBarActivity {
             return;
         }
 
-        StationDetailsFragment fragment =
-                StationDetailsFragment
-                        .newInstance(mStationId);
+        mFragment = StationDetailsFragment.newInstance(mStationId);
+
         getSupportFragmentManager()
-                .beginTransaction().add(R.id.station_details_container, fragment).commit();
+                .beginTransaction().add(R.id.station_details_container, mFragment).commit();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.station_details_menu, menu);
+        MenuItem shareItem = menu.findItem(R.id.action_share);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        MenuItem shareItem = menu.findItem(R.id.action_share);
+
+        if(mDownloadUrl != null){
+            shareItem.setVisible(true);
+            mShareActionProvider.setShareIntent(shareUrl(mDownloadUrl));
+        } else {
+            shareItem.setVisible(false);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch(item.getItemId()){
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    private Intent shareUrl(String url) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+        shareIntent.setType("text/plain");
+        return shareIntent;
+    }
+
+    public void setDownloadUrl(String url){
+        mDownloadUrl = url;
+        invalidateOptionsMenu();
     }
 
     /**

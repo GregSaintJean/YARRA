@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -300,7 +301,14 @@ public class MainActivity extends ActionBarActivity
      * Responsible for launching the settings screen within the app.
      */
     private void launchSettingsActivity() {
-        startActivity(new Intent(this, SettingsActivity.class));
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+            startActivity(new Intent(this, HoneycombSettingsActivity.class));
+        } else {
+            startActivity(new Intent(this, SettingsActivity.class));
+        }
+
+
     }
 
     @Override
