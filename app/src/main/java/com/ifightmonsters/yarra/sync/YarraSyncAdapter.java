@@ -28,7 +28,6 @@ import com.ifightmonsters.yarra.network.RadioReddit;
 import com.ifightmonsters.yarra.network.StatusResponse;
 import com.ifightmonsters.yarra.network.TalkResponse;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
@@ -140,31 +139,35 @@ public class YarraSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 LinkedList<Song> songs = (LinkedList<Song>) status.getSongs();
 
-                int size = songs.size();
+                if(songs != null){
 
-                ContentValues[] values = new ContentValues[size];
+                    int size = songs.size();
 
-                int count = 0;
+                    if(songs.size() > 0){
+                        ContentValues[] values = new ContentValues[size];
 
-                Iterator<Song> iter = songs.iterator();
+                        int count = 0;
 
-                while (iter.hasNext()) {
-                    ContentValues songValue = new ContentValues();
-                    Song song = iter.next();
-                    songValue.put(YarraContract.Song.COLUMN_STATUS_ID, statusId);
-                    songValue.put(YarraContract.Song.COLUMN_ALBUM, song.getAlbum());
-                    songValue.put(YarraContract.Song.COLUMN_ARTIST, song.getArtist());
-                    songValue.put(YarraContract.Song.COLUMN_DOWNLOAD_URL, song.getDownload_url());
-                    songValue.put(YarraContract.Song.COLUMN_GENRE, song.getGenre());
-                    songValue.put(YarraContract.Song.COLUMN_PREVIEW_URL, song.getPreview_url());
-                    songValue.put(YarraContract.Song.COLUMN_REDDIT_TITLE, song.getReddit_title());
-                    songValue.put(YarraContract.Song.COLUMN_REDDITOR, song.getRedditor());
-                    songValue.put(YarraContract.Song.COLUMN_SCORE, song.getScore());
-                    songValue.put(YarraContract.Song.COLUMN_TITLE, song.getTitle());
-                    values[count++] = songValue;
+                        for(int i = 0; i < songs.size(); i++){
+                            ContentValues songValue = new ContentValues();
+                            Song song = songs.get(i);
+                            songValue.put(YarraContract.Song.COLUMN_STATUS_ID, statusId);
+                            songValue.put(YarraContract.Song.COLUMN_ALBUM, song.getAlbum());
+                            songValue.put(YarraContract.Song.COLUMN_ARTIST, song.getArtist());
+                            songValue.put(YarraContract.Song.COLUMN_DOWNLOAD_URL, song.getDownload_url());
+                            songValue.put(YarraContract.Song.COLUMN_GENRE, song.getGenre());
+                            songValue.put(YarraContract.Song.COLUMN_PREVIEW_URL, song.getPreview_url());
+                            songValue.put(YarraContract.Song.COLUMN_REDDIT_TITLE, song.getReddit_title());
+                            songValue.put(YarraContract.Song.COLUMN_REDDITOR, song.getRedditor());
+                            songValue.put(YarraContract.Song.COLUMN_SCORE, song.getScore());
+                            songValue.put(YarraContract.Song.COLUMN_TITLE, song.getTitle());
+                            values[count++] = songValue;
+                        }
+
+                        provider.bulkInsert(YarraContract.Song.CONTENT_URI, values);
+                    }
+
                 }
-
-                provider.bulkInsert(YarraContract.Song.CONTENT_URI, values);
             }
 
         }

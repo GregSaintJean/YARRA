@@ -10,9 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public class YarraProvider extends ContentProvider {
 
     private static final int STATUS = 100;

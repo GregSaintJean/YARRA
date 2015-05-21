@@ -36,9 +36,10 @@ public class StatusTypeAdapter extends TypeAdapter<Status> {
                 status.setAll_listeners(in.nextString());
             } else if(name.equals("playlist") && in.peek() != JsonToken.NULL) {
                 status.setPlaylist(in.nextString());
-            } else if(name.equals("songs") && in.peek() != JsonToken.NULL) {
+            } /* This use to work. I guess the webmaster changed the output
+            else if(name.equals("songs") && in.peek() != JsonToken.NULL) {
                 status.setSongs(getSongs(in));
-            } else {
+            } */else {
                 in.skipValue();
             }
         }

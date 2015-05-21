@@ -4,9 +4,6 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public class YarraDbHelper extends SQLiteOpenHelper {
 
     private static final String LOG = "RadioRedditDbHelper";

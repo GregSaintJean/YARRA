@@ -4,9 +4,6 @@ import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
-/**
- * Created by Gregory on 10/31/2014.
- */
 public final class YarraContract {
 
     public static final String CONTENT_AUTHORITY = "com.ifightmonsters.yarra";
